@@ -1,12 +1,12 @@
 // Test setup: register testing-library matchers and common polyfills
-import '@testing-library/jest-dom'
-import { afterEach } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import '@testing-library/jest-dom';
+import { afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
 // Cleanup DOM between tests
 afterEach(() => {
-  cleanup()
-})
+  cleanup();
+});
 
 // Polyfill window.matchMedia for tests that rely on CSS media queries
 if (typeof window !== 'undefined' && !('matchMedia' in window)) {
@@ -22,7 +22,7 @@ if (typeof window !== 'undefined' && !('matchMedia' in window)) {
       removeEventListener: () => {},
       dispatchEvent: () => false,
     }),
-  })
+  });
 }
 
-export {}
+export {};

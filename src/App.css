@@ -11,7 +11,12 @@
   flex-direction: column;
   background: radial-gradient(circle at top, #020817, #000);
   color: #e5e7eb;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro',
+    sans-serif;
 }
 
 .hud {

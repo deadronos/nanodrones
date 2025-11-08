@@ -1,5 +1,5 @@
-import './App.css'
-import { PlayCanvasShell } from './pc/PlayCanvasShell'
+import './App.css';
+import { PlayCanvasShell } from './pc/PlayCanvasShell';
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
         <PlayCanvasShell />
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

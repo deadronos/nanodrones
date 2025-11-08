@@ -1,11 +1,12 @@
-
 # Project Idea: Nano Drones Commander (React + PlayCanvas)
 
 ## Goal
+
 Create a production-ready React + Vite + TypeScript project that embeds a PlayCanvas 3D scene (via `playcanvas-react`) for a 3rd-person, Minecraft-style voxel world.  
 The player controls a character and commands “nano drones” that can execute explicit orders or act autonomously via behavior trees/GOAP. The simulation must be deterministic and testable.
 
 ## Tech Stack & Constraints
+
 - Package manager: **npm**.
 - Build tooling: **Vite**, **TypeScript**, **ESLint**, **Prettier**, **Vitest**, **Playwright**.
 - No Husky or lint-staged.
@@ -16,6 +17,7 @@ The player controls a character and commands “nano drones” that can execute 
 - Style: Clean, modular, commented; deterministic before pretty.
 
 ## Directory Structure
+
 ```
 /src
   /app
@@ -34,6 +36,7 @@ The player controls a character and commands “nano drones” that can execute 
 ```
 
 ### Key Highlights
+
 - **PlayCanvas React Integration** via `<PlayCanvasApp />`.
 - **Third-Person Controller:** WASD + mouse orbit, smooth camera rig.
 - **Voxel World:** Seeded generator, chunk system, greedy meshing.
@@ -43,6 +46,7 @@ The player controls a character and commands “nano drones” that can execute 
 - **UI:** Debug panel, drone list, and order radial menu.
 
 ## NPM Scripts
+
 - `dev`: start Vite dev server
 - `build`: Vite production build
 - `preview`: preview build
@@ -54,6 +58,7 @@ The player controls a character and commands “nano drones” that can execute 
 - `check`: run all static checks
 
 ## Acceptance Criteria
+
 - `npm install && npm run dev` boots a scene with ground, player, 1–3 drones.
 - Player moves, camera orbits, and drones can receive a “Mine” order.
 - Pausing sim freezes logic but not render.
@@ -61,10 +66,12 @@ The player controls a character and commands “nano drones” that can execute 
 - All unit and e2e tests pass.
 
 ## Stretch Goals
+
 - Chest/inventory system (drone hauling loop).
 - Minimap overlay (orthographic chunk projection).
 - Simple post-processing and day/night cycle.
 
 ---
+
 **Project Codename:** _Nano Drones Commander_  
 **Keywords:** voxel, deterministic, ECS, drone AI, PlayCanvas, React 19.2, TypeScript, Vite

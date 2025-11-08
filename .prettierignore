@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+.cache
+coverage
+.playwright
+playwright-report
+.vscode
+.idea
+.DS_Store
+public/build
+*.min.js

@@ -1,27 +1,27 @@
-import { useEffect } from 'react'
+import { useEffect } from 'react';
 
-export type KeyState = Record<string, boolean>
+export type KeyState = Record<string, boolean>;
 
 export const useKeyboard = (onChange: (keys: KeyState) => void) => {
   useEffect(() => {
-    const keys: KeyState = {}
+    const keys: KeyState = {};
 
     const handleDown = (e: KeyboardEvent) => {
-      keys[e.key.toLowerCase()] = true
-      onChange({ ...keys })
-    }
+      keys[e.key.toLowerCase()] = true;
+      onChange({ ...keys });
+    };
 
     const handleUp = (e: KeyboardEvent) => {
-      keys[e.key.toLowerCase()] = false
-      onChange({ ...keys })
-    }
+      keys[e.key.toLowerCase()] = false;
+      onChange({ ...keys });
+    };
 
-    window.addEventListener('keydown', handleDown)
-    window.addEventListener('keyup', handleUp)
+    window.addEventListener('keydown', handleDown);
+    window.addEventListener('keyup', handleUp);
 
     return () => {
-      window.removeEventListener('keydown', handleDown)
-      window.removeEventListener('keyup', handleUp)
-    }
-  }, [onChange])
-}
+      window.removeEventListener('keydown', handleDown);
+      window.removeEventListener('keyup', handleUp);
+    };
+  }, [onChange]);
+};
