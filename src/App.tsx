@@ -1,16 +1,42 @@
 import './App.css';
 import { PlayCanvasShell } from './pc/PlayCanvasShell';
+import { DroneList } from './ui/DroneList';
+import { OrderRadial } from './ui/OrderRadial';
+import { DebugPanel } from './ui/DebugPanel';
+import { useSimStore } from './state/simStore';
 
 function App() {
+  const paused = useSimStore((s) => s.paused);
+  const togglePause = useSimStore((s) => s.togglePause);
+  const reset = useSimStore((s) => s.reset);
+  const seed = useSimStore((s) => s.seed);
+
   return (
     <div className="app-root">
-      <div className="hud">
-        <h1>Nano Drones Commander</h1>
-        <p>Seeded voxel test scene with player + drones (scaffold).</p>
-      </div>
-      <div className="scene">
-        <PlayCanvasShell />
-      </div>
+      <header className="hud">
+        <div className="hud-info">
+          <h1>Nano Drones Commander</h1>
+          <p>Deterministic voxel sandbox with autonomous mining drones.</p>
+        </div>
+        <div className="hud-actions">
+          <button type="button" onClick={togglePause}>
+            {paused ? 'Resume' : 'Pause'} Sim
+          </button>
+          <button type="button" onClick={() => reset(seed)}>
+            Reload Seed
+          </button>
+        </div>
+      </header>
+      <main className="app-main">
+        <div className="scene">
+          <PlayCanvasShell />
+        </div>
+        <aside className="sidebar">
+          <OrderRadial />
+          <DroneList />
+          <DebugPanel />
+        </aside>
+      </main>
     </div>
   );
 }
