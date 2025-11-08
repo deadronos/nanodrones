@@ -6,9 +6,12 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // ignore build and dependency folders
+  globalIgnores(['dist', 'node_modules', 'public']),
+  // TypeScript + React files
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.{ts,tsx,js,jsx}'],
+    ignores: ['**/*.d.ts'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
@@ -16,7 +19,28 @@ export default defineConfig([
       reactRefresh.configs.vite,
     ],
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      ecmaFeatures: { jsx: true },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    rules: {
+      'no-console': 'warn',
+      // allow unused args that start with underscore
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    },
+  },
+  // JavaScript-only files (fallback)
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [js.configs.recommended, reactRefresh.configs.vite],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      ecmaFeatures: { jsx: true },
       globals: globals.browser,
     },
   },
