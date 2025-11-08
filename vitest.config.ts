@@ -1,9 +1,9 @@
 import { defineConfig } from 'vitest/config'
 import baseConfig from './vite.config'
-import { mergeConfig } from 'vite'
+import { mergeConfig, type UserConfig } from 'vite'
 
 export default defineConfig(
-  mergeConfig(baseConfig as any, {
+  mergeConfig(baseConfig as UserConfig, {
     test: {
       globals: true,
       environment: 'jsdom',
