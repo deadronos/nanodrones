@@ -7,15 +7,27 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "e2e": "playwright test",
+    "check": "npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {
     "@playcanvas/react": "^0.10.3",
-    "playcanvas": "^2.12.4",
+    "playcanvas": "^2.11.8",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.8",
+    "jsdom": "^27.1.0",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.1.17",
+    "vitest": "^4.0.8",
+    "@playwright/test": "^1.49.0",
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
