@@ -24,8 +24,7 @@ const createInitialState = (): SimState => ({
 
 export const useSimStore = create<SimStore>()((set, get) => {
   const persisted = loadSim()
-  const base = persisted?.state as SimState | undefined
-  const initial = base ?? createInitialState()
+  const initial = persisted ?? createInitialState()
 
   return {
     ...initial,
