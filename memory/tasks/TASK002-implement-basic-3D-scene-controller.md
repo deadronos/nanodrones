@@ -14,6 +14,7 @@ This task creates the visual foundation for the simulator: an in-browser 3D canv
 
 ## Implementation Plan
 
+0. Create `types/playcanvas-augmentations.d.ts` that augments the `pc` namespace with small runtime-only fields (for example: `StandardMaterial.shininess?`, `Scene.gammaCorrection?`, `Scene.toneMapping?`). Add the `types` folder to `tsconfig.app.json` `include` (e.g. `"include": ["src","types"]`) and run `npm run typecheck` to validate. This avoids repeated `as any` casts across the codebase.
 1. Review and extend `src/pc/PlayCanvasShell.tsx` to ensure it exposes `onReady` and mounts/unmounts the PlayCanvas `pc.Application` cleanly. (If the file already works, add the `onReady` prop.)
 2. Add `src/pc/scene/simpleScene.ts` which creates a ground plane, ambient + directional light, and a `player` entity (box/sphere). Export a `createSimpleScene(app)` helper that returns the player entity reference.
 3. Implement `src/ecs/systems/thirdPersonController.ts` containing a small `applyMovement(position, input, dt, speed)` pure function plus a thin system wrapper that reads input and updates transforms during the sim tick.
@@ -32,6 +33,7 @@ This task creates the visual foundation for the simulator: an in-browser 3D canv
 
 | ID  | Description                                      | Status       | Updated     | Notes |
 | --- | ----------------------------------------------- | ------------ | ----------- | ----- |
+| 2.0 | Create `types/playcanvas-augmentations.d.ts` and update `tsconfig.app.json` `include` | Not Started | - | Adds TS augmentation and runs typecheck |
 | 2.1 | Create DES002 (design)                           | Completed    | 2025-11-09  | Design added to `memory/designs` |
 | 2.2 | Ensure `PlayCanvasShell` supports `onReady`      | Not Started  | -           | May already exist; verify |
 | 2.3 | Add `simpleScene` helper                         | Not Started  | -           | Creates ground/player |
@@ -44,3 +46,6 @@ This task creates the visual foundation for the simulator: an in-browser 3D canv
 ### 2025-11-09
 
 - Created design `DES002` and this task file. Task remains Pending; ready to start implementation when approved.
+- 2025-11-09
+
+- Added augmentation + tsconfig step to the task (create `types/playcanvas-augmentations.d.ts`, update `tsconfig.app.json` `include`, run `npm run typecheck`). This makes the TypeScript augmentation explicit and avoids scattered `as any` casts when accessing runtime PlayCanvas properties.

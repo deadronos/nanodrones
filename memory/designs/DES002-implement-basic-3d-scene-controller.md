@@ -20,6 +20,8 @@ Provide a minimal embedded PlayCanvas scene and a basic third-person movement co
 - `src/ecs/systems/thirdPersonController.ts` — pure-ish system that applies movement deltas to a transform.
 - `src/controls/useKeyboard.ts` — existing input hook; use it to produce move vectors or commands.
 
+- `types/playcanvas-augmentations.d.ts` — TypeScript declaration merging for runtime-only PlayCanvas properties (small augmentation for `pc` namespace to add commonly-used runtime fields such as `StandardMaterial.shininess?`, `Scene.gammaCorrection?`, and `Scene.toneMapping?`). Include this file early to avoid scattering `as any` casts across the codebase.
+
 ## Data Flow
 
 - UI/Input -> `useKeyboard` (hook) -> Movement command (structure) -> consumed by `ThirdPersonController` during sim tick -> player transform updated -> PlayCanvas render reads transform and draws.
@@ -36,10 +38,13 @@ Provide a minimal embedded PlayCanvas scene and a basic third-person movement co
 - Controller should accept a fixed delta-time parameter so movement is stable across frame rates.
 - Keep visual assets minimal (simple primitives + colours) to avoid the need for external downloads.
 
+- TypeScript: Add a small augmentation file at `types/playcanvas-augmentations.d.ts` and include the `types` folder in the `tsconfig.app.json` `include` (for example: `"include": ["src", "types"]`). This prevents repeated `as any` casts when accessing runtime-only PlayCanvas properties and keeps the codebase typed and maintainable. Run `npm run typecheck` after adding to validate.
+
 ## Tasks (high level)
 
+0. Create `types/playcanvas-augmentations.d.ts` (declaration merging for `pc`) and update `tsconfig.app.json` `include` to add the `types` folder; run `npm run typecheck` to verify types.
 1. Ensure `PlayCanvasShell` supports an `onReady` hook and clean mount/unmount semantics.
-2. Add `simpleScene` helper to instantiate ground, light, and player entity.
+2. Add `simpleScene` helper to instantiate ground, light, and a player entity.
 3. Implement `ThirdPersonController` system and connect to `useKeyboard`.
 4. Wire the shell into `App.tsx` (or a story) for manual validation.
 5. Add unit test(s) for the controller logic (pure function) and a small integration test to observe transform change.
