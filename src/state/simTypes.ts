@@ -72,3 +72,31 @@ export interface SimState {
   orders: Order[];
   orderCounter: number;
 }
+
+export interface Snapshot {
+  version: number;
+  createdAt?: string;
+  state: SimState;
+  metadata?: Record<string, unknown>;
+}
+
+export const validateSnapshotShape = (s: unknown): s is Snapshot => {
+  if (!s || typeof s !== 'object') return false;
+  const snap = s as any;
+  if (typeof snap.version !== 'number') return false;
+  if (!snap.state || typeof snap.state !== 'object') return false;
+  const st = snap.state as any;
+  if (typeof st.seed !== 'number') return false;
+  if (typeof st.rngSeed !== 'number') return false;
+  if (typeof st.tick !== 'number') return false;
+  if (!Array.isArray(st.drones)) return false;
+  if (!Array.isArray(st.orders)) return false;
+  // basic drone shape check
+  for (const d of st.drones) {
+    if (!d || typeof d !== 'object') return false;
+    if (typeof d.id !== 'string') return false;
+    if (!Array.isArray(d.position) || d.position.length !== 3) return false;
+    if (!d.position.every((n: any) => typeof n === 'number')) return false;
+  }
+  return true;
+};
