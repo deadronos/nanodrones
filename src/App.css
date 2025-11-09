@@ -68,6 +68,7 @@
 }
 
 .app-main {
+  position: relative;
   flex: 1;
   display: grid;
   grid-template-columns: 1fr minmax(280px, 320px);
@@ -86,13 +87,18 @@
 }
 
 .sidebar {
-  background: linear-gradient(180deg, rgba(10, 15, 26, 0.95), rgba(4, 6, 12, 0.98));
-  border-left: 1px solid rgba(59, 130, 246, 0.25);
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(10, 15, 26, 0.98), rgba(4, 6, 12, 0.99));
+  border-top: 1px solid rgba(59, 130, 246, 0.25);
   padding: 1rem 1.2rem;
-  overflow-y: auto;
+  overflow-x: auto;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 1rem;
+  align-items: flex-start;
 }
 
 .panel {
