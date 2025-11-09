@@ -43,6 +43,13 @@ export interface PlayerState {
   velocity: Vec3;
 }
 
+export interface InputState {
+  forward: boolean;
+  backward: boolean;
+  left: boolean;
+  right: boolean;
+}
+
 export type OrderStatus = 'pending' | 'assigned' | 'completed';
 
 export interface MineOrder {

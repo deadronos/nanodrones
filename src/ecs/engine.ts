@@ -1,61 +1,13 @@
 import { Rng } from '../state/rng';
 import type { DroneState, MineOrder, SimState, Vec3, VoxelCoord } from '../state/simTypes';
-import { add, clampVec3XZ, length, normalize, scale } from '../utils/vec3';
-import {
-  columnKey,
-  markResourceDepleted,
-  sampleHeightAtWorld,
-  voxelToWorld,
-} from '../voxel/generator';
+import { add, length, scale } from '../utils/vec3';
+import { columnKey, markResourceDepleted, voxelToWorld } from '../voxel/generator';
+import { thirdPersonController, type SimContext } from './systems/thirdPersonController';
 
-const PLAYER_SPEED = 4;
 const DRONE_SPEED = 2.5;
 const MINING_TIME = 2; // seconds to mine a resource block
-const WORLD_MARGIN = 1;
-
-export interface InputState {
-  forward: boolean;
-  backward: boolean;
-  left: boolean;
-  right: boolean;
-}
-
-export interface SimContext {
-  input: InputState;
-  heading: number;
-  dt: number;
-}
 
 const cloneOrder = (order: MineOrder): MineOrder => ({ ...order });
-
-const movePlayer = (state: SimState, ctx: SimContext): SimState => {
-  const { input, heading, dt } = ctx;
-  const forwardVec: Vec3 = [Math.sin(heading), 0, Math.cos(heading)];
-  const rightVec: Vec3 = [Math.cos(heading), 0, -Math.sin(heading)];
-
-  let move: Vec3 = [0, 0, 0];
-  if (input.forward) move = add(move, forwardVec);
-  if (input.backward) move = add(move, scale(forwardVec, -1));
-  if (input.left) move = add(move, scale(rightVec, -1));
-  if (input.right) move = add(move, rightVec);
-
-  const direction = normalize(move);
-  const displacement = scale(direction, PLAYER_SPEED * dt);
-  const tentative = add(state.player.position, displacement);
-  const half = state.world.chunk.size / 2 - WORLD_MARGIN;
-  const clamped = clampVec3XZ(tentative, half);
-  const ground = sampleHeightAtWorld(state.world.chunk, clamped[0], clamped[2]);
-  const y = ground + 0.6;
-
-  return {
-    ...state,
-    player: {
-      ...state.player,
-      position: [clamped[0], y, clamped[2]],
-      velocity: displacement,
-    },
-  };
-};
 
 const assignOrders = (orders: MineOrder[], drones: DroneState[]): MineOrder[] => {
   const next = orders.map(cloneOrder);
@@ -215,7 +167,7 @@ export const runSimTick = (state: SimState, ctx: SimContext): SimState => {
     },
   };
 
-  return movePlayer(nextState, ctx);
+  return thirdPersonController(nextState, ctx);
 };
 
 export const findNearestResource = (
@@ -245,3 +197,5 @@ export const findNearestResource = (
   }
   return best?.coord ?? null;
 };
+
+export type { SimContext } from './systems/thirdPersonController';

@@ -5,19 +5,11 @@ import { buildChunkMesh } from '../voxel/mesher';
 import type { ChunkState } from '../state/simTypes';
 import { useSimStore } from '../state/simStore';
 import { useKeyboard } from '../controls/useKeyboard';
+import { createStandardMaterial } from './scene/materials';
+import { createSimpleScene } from './scene/simpleScene';
 
 const TERRAIN_MATERIAL_COLOR = new pc.Color(0.2, 0.45, 0.25);
-const PLAYER_COLOR = new pc.Color(0.85, 0.9, 1);
 const DRONE_COLOR = new pc.Color(0.9, 0.8, 0.25);
-
-const createStandardMaterial = (color: pc.Color) => {
-  const material = new pc.StandardMaterial();
-  material.diffuse = color;
-  material.metalness = 0.1;
-  material.shininess = 40;
-  material.update();
-  return material;
-};
 
 const buildTerrainEntity = (app: pc.Application, chunk: ChunkState) => {
   const meshData = buildChunkMesh(chunk);
@@ -41,7 +33,11 @@ const buildTerrainEntity = (app: pc.Application, chunk: ChunkState) => {
   return entity;
 };
 
-export const PlayCanvasShell: FC = () => {
+interface PlayCanvasShellProps {
+  onReady?: (app: pc.Application) => void;
+}
+
+export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const appRef = useRef<pc.Application | null>(null);
   const playerRef = useRef<pc.Entity | null>(null);
@@ -77,6 +73,9 @@ export const PlayCanvasShell: FC = () => {
     app.scene.toneMapping = pc.TONEMAP_ACES;
 
     appRef.current = app;
+    const { player } = createSimpleScene(app);
+    playerRef.current = player;
+    onReady?.(app);
 
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
@@ -85,33 +84,6 @@ export const PlayCanvasShell: FC = () => {
     });
     app.root.addChild(camera);
     cameraRef.current = camera;
-
-    const light = new pc.Entity('sun');
-    light.addComponent('light', {
-      type: 'directional',
-      castShadows: true,
-      color: new pc.Color(1, 0.98, 0.92),
-      intensity: 2.4,
-      shadowDistance: 50,
-      shadowBias: 0.12,
-    });
-    light.setLocalEulerAngles(45, 35, 0);
-    app.root.addChild(light);
-
-    const ground = new pc.Entity('ground');
-    ground.addComponent('render', { type: 'plane' });
-    ground.setLocalScale(80, 1, 80);
-    const groundMat = createStandardMaterial(new pc.Color(0.05, 0.12, 0.1));
-    (ground.render!.material as pc.Material) = groundMat;
-    app.root.addChild(ground);
-
-    const player = new pc.Entity('player');
-    player.addComponent('render', { type: 'box' });
-    const playerMat = createStandardMaterial(PLAYER_COLOR.clone());
-    (player.render!.material as pc.Material) = playerMat;
-    player.setLocalScale(0.6, 1.2, 0.6);
-    app.root.addChild(player);
-    playerRef.current = player;
 
     const handleResize = () => {
       app.resizeCanvas(canvas.clientWidth, canvas.clientHeight);
@@ -129,7 +101,7 @@ export const PlayCanvasShell: FC = () => {
       terrainRef.current = null;
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [onReady]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

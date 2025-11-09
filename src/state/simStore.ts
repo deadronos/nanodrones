@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { runSimTick, findNearestResource } from '../ecs/engine';
 import { createInitialState, DEFAULT_SEED } from './initialState';
 import { loadSim, saveSim } from './persistence';
-import type { MineOrder, SimState } from './simTypes';
+import type { InputState, MineOrder, SimState } from './simTypes';
 
 const FIXED_DT = 1 / 60;
 const PERSIST_INTERVAL = 60; // once per simulated second
@@ -11,13 +11,6 @@ export interface CameraOrbitState {
   theta: number;
   phi: number;
   distance: number;
-}
-
-export interface InputState {
-  forward: boolean;
-  backward: boolean;
-  left: boolean;
-  right: boolean;
 }
 
 export interface SimStore extends SimState {

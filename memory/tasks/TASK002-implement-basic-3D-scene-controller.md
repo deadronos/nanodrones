@@ -1,6 +1,6 @@
 # TASK002 - Implement basic 3D scene & controller
 
-**Status:** Pending  
+**Status:** Completed  
 **Added:** 2025-11-09  
 **Updated:** 2025-11-09
 
@@ -27,25 +27,26 @@ This task creates the visual foundation for the simulator: an in-browser 3D canv
 
 ## Progress Tracking
 
-**Overall Status:** Not Started - 0%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
 | ID  | Description                                      | Status       | Updated     | Notes |
 | --- | ----------------------------------------------- | ------------ | ----------- | ----- |
-| 2.0 | Create `types/playcanvas-augmentations.d.ts` and update `tsconfig.app.json` `include` | Not Started | - | Adds TS augmentation and runs typecheck |
+| 2.0 | Create `types/playcanvas-augmentations.d.ts` and update `tsconfig.app.json` `include` | Completed | 2025-11-09 | Adds TS augmentation and runs typecheck |
 | 2.1 | Create DES002 (design)                           | Completed    | 2025-11-09  | Design added to `memory/designs` |
-| 2.2 | Ensure `PlayCanvasShell` supports `onReady`      | Not Started  | -           | May already exist; verify |
-| 2.3 | Add `simpleScene` helper                         | Not Started  | -           | Creates ground/player |
-| 2.4 | Implement `ThirdPersonController` system         | Not Started  | -           | Controller+unit test |
-| 2.5 | Wire into `App.tsx` / manual validation story    | Not Started  | -           | Dev-only UI entrypoint |
-| 2.6 | Add tests (unit + integration)                   | Not Started  | -           | Use Vitest |
+| 2.2 | Ensure `PlayCanvasShell` supports `onReady`      | Completed  | 2025-11-09  | Verified new prop and cleanup |
+| 2.3 | Add `simpleScene` helper                         | Completed  | 2025-11-09  | Shared scene construction helper |
+| 2.4 | Implement `ThirdPersonController` system         | Completed  | 2025-11-09  | Pure movement helper + sim system |
+| 2.5 | Wire into `App.tsx` / manual validation story    | Completed  | 2025-11-09  | PlayCanvasShell already mounted in App |
+| 2.6 | Add tests (unit + integration)                   | Completed  | 2025-11-09  | Vitest coverage for controller and input |
 
 ## Progress Log
 
 ### 2025-11-09
 
+- Implemented the `thirdPersonController` system with `applyMovement`, hooked `runSimTick` to the new controller, and maintained deterministic state updates.
+- Added `src/pc/scene/simpleScene.ts` plus shared material helper, refactored `PlayCanvasShell` to use the helper, and exposed `onReady` while keeping cleanup deterministic.
+- Added unit/integration tests that verify `applyMovement` behavior and confirm the sim store player responds to input, closing out the acceptance criteria.
 - Created design `DES002` and this task file. Task remains Pending; ready to start implementation when approved.
-- 2025-11-09
-
 - Added augmentation + tsconfig step to the task (create `types/playcanvas-augmentations.d.ts`, update `tsconfig.app.json` `include`, run `npm run typecheck`). This makes the TypeScript augmentation explicit and avoids scattered `as any` casts when accessing runtime PlayCanvas properties.

@@ -5,17 +5,14 @@
 - Project scaffold and initial architecture document present.
 - Requirements (EARS-style) drafted in `requirements.md`.
 - Basic task index and `TASK001` added.
+- PlayCanvas shell now instantiates a minimal scene, and the deterministic third-person controller is wired through the sim tick.
 
 ## What's Left
-
-- Implement PlayCanvas shell and simple scene.
-- Wire deterministic sim tick loop and sim store.
-- Add drone behaviors, order queue, and persistence.
-- Add unit/integration tests for sim core and persistence.
+- Add drone behaviors, order queue, and persistence (TASK003).
+- Expand coverage for persistence migrations and order flows.
 
 ## Current Status
-
-- Early prototype / bootstrap phase. Core design and requirements defined; implementation work beginning.
+- Early prototype with a working scene and deterministic controller; focus shifts toward persistence, drones, and broader integration.
 
 ## Known Issues / Risks
 
