@@ -31,6 +31,7 @@ npm run build
 - `src/state/simStore.ts` — fixed-timestep loop and persistence triggers.
 - `src/pc/PlayCanvasShell.tsx` — PlayCanvas setup, RAF loop, and mapping sim -> scene.
 - `src/state/persistence.ts` — localStorage save/load + migration strategy.
+- `@playcanvas/pcui`: Consider using or extending PlayCanvas UI components (`pcui`) for editor-like UI, tool panels, and HUDs. React wrappers are available at `@playcanvas/pcui/react`; import `@playcanvas/pcui/styles` once per app. See `docs/context/context-playcanvas-pcui.md` for a short summary.
 - `memory/` — memory bank for specs, designs, and tasks (update when making design/requirement changes).
 
 ## Agent Guidance (must-read)
