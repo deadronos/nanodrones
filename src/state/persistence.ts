@@ -2,7 +2,7 @@ import { createInitialState, DEFAULT_SEED } from './initialState';
 import type { SimState } from './simTypes';
 
 const STORAGE_KEY = 'nano-drones-save';
-const CURRENT_VERSION = 2 as const;
+export const CURRENT_VERSION = 2 as const;
 
 interface LegacyDrone {
   id: string;

@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { runSimTick, findNearestResource } from '../ecs/engine';
 import { createInitialState, DEFAULT_SEED } from './initialState';
-import { loadSim, saveSim } from './persistence';
-import type { InputState, MineOrder, SimState } from './simTypes';
+import { loadSim, saveSim, saveSnapshot, loadSnapshot, CURRENT_VERSION } from './persistence';
+import type { InputState, MineOrder, SimState, Snapshot, Order } from './simTypes';
 
 const FIXED_DT = 1 / 60;
 const PERSIST_INTERVAL = 60; // once per simulated second
@@ -25,6 +25,10 @@ export interface SimStore extends SimState {
   setInput(input: Partial<InputState>): void;
   setCamera(theta: number, phi: number, distance?: number): void;
   reset(seed?: number): void;
+  getSnapshot(): Snapshot;
+  loadSnapshot(snapshot: Snapshot): void;
+  stepOnce(): void;
+  applyCommand(cmd: Order): void;
 }
 
 const defaultInput: InputState = {
@@ -89,6 +93,62 @@ export const useSimStore = create<SimStore>()((set, get) => {
         set({ lastPersistedTick: simState.tick });
       }
     },
+    getSnapshot: () => {
+      const state = get();
+      return {
+        version: CURRENT_VERSION as number,
+        createdAt: new Date().toISOString(),
+        state: pickSimState(state),
+      } as Snapshot;
+    },
+    loadSnapshot: (snapshot: Snapshot) => {
+      const s = snapshot.state;
+      set((current) => ({
+        ...current,
+        ...s,
+        paused: false,
+        accumulator: 0,
+        lastPersistedTick: s.tick,
+      }));
+    },
+    stepOnce: () => {
+      set((current) => {
+        const simState: SimState = pickSimState(current);
+        const nextSim = runSimTick(simState, {
+          input: current.input,
+          heading: current.camera.theta,
+          dt: FIXED_DT,
+        });
+        const next: SimStore = {
+          ...current,
+          ...nextSim,
+        };
+        // persist after single step
+        saveSim(pickSimState(nextSim));
+        return next;
+      });
+    },
+    applyCommand: (cmd: Order) => {
+      set((current) => {
+        const simState = pickSimState(current);
+        const id = (cmd as any).id ?? `order-${simState.orderCounter + 1}`;
+        const order: MineOrder = {
+          id,
+          type: 'mine',
+          // @ts-ignore - assume cmd has target
+          target: (cmd as any).target,
+          status: 'pending',
+        };
+        const nextOrders = [...simState.orders, order];
+        const next = {
+          ...current,
+          orders: nextOrders,
+          orderCounter: simState.orderCounter + 1,
+        };
+        saveSim(pickSimState(next));
+        return next;
+      });
+    },
     togglePause: () => {
       set((current) => ({ ...current, paused: !current.paused }));
     },
@@ -151,3 +211,5 @@ export const useSimStore = create<SimStore>()((set, get) => {
 
   return initial;
 });
+
+export const createSim = (seed?: number) => createInitialState(seed);
