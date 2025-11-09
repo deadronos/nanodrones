@@ -3,7 +3,9 @@ import { PlayCanvasShell } from './pc/PlayCanvasShell';
 import { DroneList } from './ui/DroneList';
 import { OrderRadial } from './ui/OrderRadial';
 import { DebugPanel } from './ui/DebugPanel';
+import DevToolsPanel from './ui/DevToolsPanel';
 import { useSimStore } from './state/simStore';
+import { useState } from 'react';
 
 function App() {
   const paused = useSimStore((s) => s.paused);
@@ -25,6 +27,11 @@ function App() {
           <button type="button" onClick={() => reset(seed)}>
             Reload Seed
           </button>
+          {process.env.NODE_ENV !== 'production' && (
+            <button type="button" onClick={() => setShowDev((s) => !s)} title="Dev Tools">
+              ⚙
+            </button>
+          )}
         </div>
       </header>
       <main className="app-main">
@@ -35,6 +42,7 @@ function App() {
           <OrderRadial />
           <DroneList />
           <DebugPanel />
+          {process.env.NODE_ENV !== 'production' && showDev && <DevToolsPanel />}
         </aside>
       </main>
     </div>
