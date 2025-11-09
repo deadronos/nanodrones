@@ -10,16 +10,13 @@ export interface SimpleSceneHandles {
   player: pc.Entity;
   ground: pc.Entity;
   sun: pc.Entity;
-  ambient: pc.Entity;
 }
 
 export const createSimpleScene = (app: pc.Application): SimpleSceneHandles => {
-  const ambient = new pc.Entity('ambient-light');
-  ambient.addComponent('light', {
-    type: 'ambient',
-    color: AMBIENT_COLOR,
-  });
-  app.root.addChild(ambient);
+  // Use the scene ambient light instead of creating an ambient light component.
+  // PlayCanvas expects ambient lighting to be set on the scene rather than
+  // created via a light component entity.
+  app.scene.ambientLight = AMBIENT_COLOR.clone();
 
   const sun = new pc.Entity('sun');
   sun.addComponent('light', {
@@ -47,5 +44,5 @@ export const createSimpleScene = (app: pc.Application): SimpleSceneHandles => {
   (player.render!.material as pc.Material) = createStandardMaterial(PLAYER_COLOR.clone());
   app.root.addChild(player);
 
-  return { player, ground, sun, ambient };
+  return { player, ground, sun };
 };
