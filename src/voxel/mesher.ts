@@ -1,4 +1,5 @@
 import type { ChunkState } from '../state/simTypes';
+import { getColumnHeight } from './generator';
 
 export interface MeshData {
   positions: number[];
@@ -35,8 +36,7 @@ const addFace = (
 };
 
 const heightAt = (chunk: ChunkState, x: number, z: number): number => {
-  if (x < 0 || z < 0 || x >= chunk.size || z >= chunk.size) return 0;
-  return chunk.heightMap[z * chunk.size + x];
+  return getColumnHeight(chunk, x, z);
 };
 
 export const buildChunkMesh = (chunk: ChunkState): MeshData => {

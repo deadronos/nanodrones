@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createInitialState } from '../src/state/initialState';
 import { processDroneTick } from '../src/sim/drones';
-import { voxelToWorld } from '../src/voxel/generator';
+import { listActiveResources, voxelToWorld } from '../src/voxel/generator';
 
 const FIXED_DT = 1 / 60;
 
@@ -29,8 +29,8 @@ describe('Drone behavior (pure)', () => {
     const state = createInitialState(777);
     // find a resource in the chunk to target
     const chunk = state.world.chunk;
-    const idx = chunk.resources.findIndex((r) => r);
-    if (idx === -1) {
+    const resources = listActiveResources(chunk);
+    if (resources.length === 0) {
       // no resources to test against; skip assertion
       const drone = { ...state.drones[0] };
       const order = { id: 'm-1', type: 'mine', target: { x: 0, y: 0, z: 0 }, status: 'pending' } as any;
@@ -39,10 +39,7 @@ describe('Drone behavior (pure)', () => {
       expect(s2).toBeDefined();
       return;
     }
-    const size = chunk.size;
-    const z = Math.floor(idx / size);
-    const x = idx % size;
-    const coord = { x, y: chunk.heightMap[idx] - 1, z };
+    const coord = resources[0];
     const [wx, , wz] = voxelToWorld(chunk, coord);
     const hover = [wx, coord.y + 1.4, wz] as [number, number, number];
     const drone = { ...state.drones[0], position: hover };

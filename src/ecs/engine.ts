@@ -1,6 +1,6 @@
 import { Rng } from '../state/rng';
 import type { DroneState, MineOrder, SimState, Vec3, VoxelCoord } from '../state/simTypes';
-import { columnKey, markResourceDepleted, voxelToWorld } from '../voxel/generator';
+import { columnKey, listActiveResources, markResourceDepleted, voxelToWorld } from '../voxel/generator';
 import { thirdPersonController, type SimContext } from './systems/thirdPersonController';
 
 const cloneOrder = (order: MineOrder): MineOrder => ({ ...order });
@@ -78,21 +78,16 @@ export const findNearestResource = (
   const reserved = new Set<string>(excludeOrders.map((o) => columnKey(o.target)));
   const chunk = state.world.chunk;
   let best: { coord: VoxelCoord; distance: number } | null = null;
-  for (let z = 0; z < chunk.size; z += 1) {
-    for (let x = 0; x < chunk.size; x += 1) {
-      const idx = z * chunk.size + x;
-      if (!chunk.resources[idx]) continue;
-      const coord: VoxelCoord = { x, y: chunk.heightMap[idx] - 1, z };
-      const key = columnKey(coord);
-      if (reserved.has(key)) continue;
-      const [wx, wy, wz] = voxelToWorld(chunk, coord);
-      const dx = wx - origin[0];
-      const dy = wy - origin[1];
-      const dz = wz - origin[2];
-      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      if (!best || dist < best.distance) {
-        best = { coord, distance: dist };
-      }
+  for (const coord of listActiveResources(chunk)) {
+    const key = columnKey(coord);
+    if (reserved.has(key)) continue;
+    const [wx, wy, wz] = voxelToWorld(chunk, coord);
+    const dx = wx - origin[0];
+    const dy = wy - origin[1];
+    const dz = wz - origin[2];
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (!best || dist < best.distance) {
+      best = { coord, distance: dist };
     }
   }
   return best?.coord ?? null;

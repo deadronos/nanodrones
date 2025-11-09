@@ -6,10 +6,18 @@ export interface VoxelCoord {
   z: number;
 }
 
+export type BlockId = 'air' | 'ground' | 'resource';
+
+export interface ChunkId {
+  x: number;
+  z: number;
+}
+
 export interface ChunkState {
+  id: ChunkId;
   size: number;
-  heightMap: number[]; // length = size * size
-  resources: boolean[]; // true if resource block present at column top
+  height: number;
+  blocks: BlockId[];
 }
 
 export interface WorldState {
@@ -80,6 +88,22 @@ export interface Snapshot {
   metadata?: Record<string, unknown>;
 }
 
+const isBlockId = (value: unknown): value is BlockId =>
+  value === 'air' || value === 'ground' || value === 'resource';
+
+const validateChunkShape = (chunk: unknown): chunk is ChunkState => {
+  if (!chunk || typeof chunk !== 'object') return false;
+  const chk = chunk as any;
+  if (!chk.id || typeof chk.id !== 'object') return false;
+  if (typeof chk.id.x !== 'number' || typeof chk.id.z !== 'number') return false;
+  if (typeof chk.size !== 'number' || chk.size <= 0) return false;
+  if (typeof chk.height !== 'number' || chk.height <= 0) return false;
+  if (!Array.isArray(chk.blocks)) return false;
+  if (chk.blocks.length !== chk.size * chk.size * chk.height) return false;
+  if (!chk.blocks.every(isBlockId)) return false;
+  return true;
+};
+
 export const validateSnapshotShape = (s: unknown): s is Snapshot => {
   if (!s || typeof s !== 'object') return false;
   const snap = s as any;
@@ -91,6 +115,8 @@ export const validateSnapshotShape = (s: unknown): s is Snapshot => {
   if (typeof st.tick !== 'number') return false;
   if (!Array.isArray(st.drones)) return false;
   if (!Array.isArray(st.orders)) return false;
+  if (!st.world || typeof st.world !== 'object') return false;
+  if (!validateChunkShape(st.world.chunk)) return false;
   // basic drone shape check
   for (const d of st.drones) {
     if (!d || typeof d !== 'object') return false;

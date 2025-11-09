@@ -27,3 +27,16 @@
 
 **Acceptance:** Adding a migration requires (a) bumping `CURRENT_VERSION` in `src/state/persistence.ts`, (b) adding a migration function to the migrations map, and (c) adding a test fixture under `tests/fixtures/migrations/` that asserts the migrated snapshot meets the current schema. [Date: 2025-11-09]
 
+## TASK004 — Voxel core types and single-chunk migration (EARS requirements)
+
+1. WHEN the simulation starts, THE SYSTEM SHALL initialize the deterministic world as a block-based chunk (with `BlockId` layers) generated from the configured seed so that replaying the same seed reconstructs the same terrain geometry.
+
+   **Acceptance:** A unit test must regenerate the chunk twice using the same RNG seed and assert the derived chunk metadata, block array, and resource list are equal.
+
+2. WHEN drones or UI helpers request active resource columns, THE SYSTEM SHALL derive the coordinates from the chunk's block array (identifying `resource` cells) instead of the legacy heightmap and resource flags, preserving the behavior of `listActiveResources` / `findNearestResource`.
+
+   **Acceptance:** Resource lookup helpers must return the same `VoxelCoord`s as before the migration when the resource blocks are placed at the top of each column.
+
+3. WHEN loading a version 2 snapshot, THE SYSTEM SHALL migrate the legacy heightmap representation into the new block-based chunk schema without altering player, drone, or order data.
+
+   **Acceptance:** The migration test should start from a synthetically crafted V2 payload, call `migrateSnapshot`, and verify the resulting chunk has the same number of resource targets and valid `BlockId` layers while other state fields remain untouched.

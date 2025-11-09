@@ -1,16 +1,27 @@
 import { describe, it, expect } from 'vitest';
 import { validateSnapshotShape } from '../src/state/simTypes';
+import { CURRENT_VERSION } from '../src/state/persistence';
 
 describe('Snapshot shape validator', () => {
   it('accepts a valid snapshot object', () => {
+    const width = 2;
+    const height = 4;
     const snapshot = {
-      version: 2,
+      version: CURRENT_VERSION,
       createdAt: new Date().toISOString(),
       state: {
         seed: 123,
         rngSeed: 456,
         tick: 0,
-        world: { seed: 123, chunk: { size: 16, heightMap: [], resources: [] } },
+        world: {
+          seed: 123,
+          chunk: {
+            id: { x: 0, z: 0 },
+            size: width,
+            height,
+            blocks: new Array(width * width * height).fill('air'),
+          },
+        },
         player: { position: [0, 0, 0], yaw: 0, pitch: 0, velocity: [0, 0, 0] },
         drones: [
           {

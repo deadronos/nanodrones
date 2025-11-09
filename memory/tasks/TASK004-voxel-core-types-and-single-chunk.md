@@ -1,6 +1,6 @@
 # [TASK004] - Voxel Core Types and Single-Chunk Migration
 
-**Status:** Pending  
+**Status:** In Progress  
 **Added:** 2025-11-09  
 **Updated:** 2025-11-09
 
@@ -29,9 +29,9 @@ Start by formalizing the voxel representation in the sim core to match DES004 wh
 
 | ID  | Description                                  | Status       | Updated     | Notes |
 | --- | -------------------------------------------- | ------------ | ----------- | ----- |
-| 4.1 | Add core voxel types to sim types            | Not Started  | 2025-11-09  |       |
-| 4.2 | Implement single-chunk `WorldState`          | Not Started  | 2025-11-09  |       |
-| 4.3 | Update mesher to work on `ChunkState`        | Not Started  | 2025-11-09  |       |
+| 4.1 | Add core voxel types to sim types            | Completed    | 2025-11-09  |       |
+| 4.2 | Implement single-chunk `WorldState`          | In Progress  | 2025-11-09  |       |
+| 4.3 | Update mesher to work on `ChunkState`        | In Progress  | 2025-11-09  |       |
 | 4.4 | Ensure behavior parity with existing world   | Not Started  | 2025-11-09  |       |
 | 4.5 | Add determinism tests for world generation   | Not Started  | 2025-11-09  |       |
 
@@ -39,3 +39,6 @@ Start by formalizing the voxel representation in the sim core to match DES004 wh
 
 2025-11-09
 - Task created from DES004 spec.
+
+2025-11-10
+- Introduced block-based `ChunkState`, rewired the voxel generator/mesher, and started updating persistence/migration scaffolding for Task004.

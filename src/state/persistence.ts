@@ -1,8 +1,9 @@
 import { createInitialState, DEFAULT_SEED } from './initialState';
-import type { SimState } from './simTypes';
+import { DEFAULT_CHUNK_HEIGHT } from '../voxel/generator';
+import type { ChunkState, DroneState, Order, PlayerState, SimState } from './simTypes';
 
 const STORAGE_KEY = 'nano-drones-save';
-export const CURRENT_VERSION = 2 as const;
+export const CURRENT_VERSION = 3 as const;
 
 interface LegacyDrone {
   id: string;
@@ -22,12 +23,39 @@ interface PersistedV1 {
   state: LegacySimStateV1;
 }
 
+interface LegacyChunkStateV2 {
+  size: number;
+  heightMap: number[];
+  resources: boolean[];
+}
+
+interface LegacyWorldStateV2 {
+  seed: number;
+  chunk: LegacyChunkStateV2;
+}
+
+interface LegacySimStateV2 {
+  seed: number;
+  rngSeed: number;
+  tick: number;
+  world: LegacyWorldStateV2;
+  player: PlayerState;
+  drones: DroneState[];
+  orders: Order[];
+  orderCounter: number;
+}
+
 interface PersistedV2 {
   version: 2;
+  state: LegacySimStateV2;
+}
+
+interface PersistedV3 {
+  version: 3;
   state: SimState;
 }
 
-type PersistedSim = PersistedV1 | PersistedV2;
+type PersistedSim = PersistedV1 | PersistedV2 | PersistedV3;
 
 const migrateV1 = (data: PersistedV1): SimState => {
   const legacy = data.state;
@@ -45,8 +73,47 @@ const migrateV1 = (data: PersistedV1): SimState => {
   };
 };
 
+const columnBlockIndex = (size: number, height: number, x: number, y: number, z: number) =>
+  y * size * size + z * size + x;
+
+const buildChunkFromLegacy = (legacy: LegacyChunkStateV2): ChunkState => {
+  const blocks = new Array(legacy.size * DEFAULT_CHUNK_HEIGHT * legacy.size).fill('air');
+  for (let z = 0; z < legacy.size; z += 1) {
+    for (let x = 0; x < legacy.size; x += 1) {
+      const idx = z * legacy.size + x;
+      const storedHeight = Math.max(1, legacy.heightMap[idx] ?? 1);
+      const columnHeight = Math.min(storedHeight, DEFAULT_CHUNK_HEIGHT);
+      for (let y = 0; y < columnHeight; y += 1) {
+        blocks[columnBlockIndex(legacy.size, DEFAULT_CHUNK_HEIGHT, x, y, z)] = 'ground';
+      }
+      if (legacy.resources[idx]) {
+        const resourceY = Math.min(columnHeight - 1, DEFAULT_CHUNK_HEIGHT - 1);
+        blocks[columnBlockIndex(legacy.size, DEFAULT_CHUNK_HEIGHT, x, resourceY, z)] = 'resource';
+      }
+    }
+  }
+  return {
+    id: { x: 0, z: 0 },
+    size: legacy.size,
+    height: DEFAULT_CHUNK_HEIGHT,
+    blocks,
+  };
+};
+
+const migrateV2 = (data: PersistedV2): SimState => {
+  const legacy = data.state;
+  return {
+    ...legacy,
+    world: {
+      ...legacy.world,
+      chunk: buildChunkFromLegacy(legacy.world.chunk),
+    },
+  };
+};
+
 const migrate = (data: PersistedSim): SimState | null => {
-  if (data.version === 2) return data.state;
+  if (data.version === 3) return data.state;
+  if (data.version === 2) return migrateV2(data);
   if (data.version === 1) return migrateV1(data);
   return null;
 };
@@ -66,7 +133,7 @@ export const loadSim = (): SimState | null => {
 
 export const saveSim = (state: SimState) => {
   if (typeof window === 'undefined') return;
-  const payload: PersistedV2 = { version: CURRENT_VERSION, state };
+  const payload: PersistedV3 = { version: CURRENT_VERSION, state };
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch {
@@ -83,7 +150,7 @@ export const saveSnapshot = (snapshot: Snapshot, key = STORAGE_KEY) => {
     version: CURRENT_VERSION,
     createdAt: snapshot.createdAt ?? new Date().toISOString(),
     state: snapshot.state,
-  } as PersistedV2;
+  } as PersistedV3;
   try {
     window.localStorage.setItem(key, JSON.stringify(payload));
   } catch {
