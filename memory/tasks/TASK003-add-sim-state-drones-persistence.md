@@ -1,6 +1,6 @@
 # TASK003 - Add sim state, drones, and persistence
 
-**Status:** In Progress - 95%
+**Status:** Completed
 
 **Added:** 2025-11-09
 
@@ -122,3 +122,5 @@ The sim core is the project's heart: its state must be serialisable and determin
 ## Status: Near complete
 
 Most functionality requested in TASK003 has been implemented and tested. The remaining work is documentation (memory bank update) and optional migration fixture tests.
+
+## Status: Completed
