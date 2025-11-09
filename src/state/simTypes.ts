@@ -17,12 +17,7 @@ export interface WorldState {
   chunk: ChunkState;
 }
 
-export type DroneActivity =
-  | 'idle'
-  | 'moving'
-  | 'mining'
-  | 'returning'
-  | 'charging';
+export type DroneActivity = 'idle' | 'moving' | 'mining' | 'returning' | 'charging';
 
 export interface DroneTask {
   id: string; // order id

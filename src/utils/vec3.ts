@@ -20,7 +20,8 @@ export const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => [
   a[2] + (b[2] - a[2]) * t,
 ];
 
-export const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+export const clamp = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value));
 
 export const clampVec3XZ = (v: Vec3, range: number): Vec3 => [
   clamp(v[0], -range, range),

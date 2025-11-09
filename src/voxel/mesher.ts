@@ -9,7 +9,20 @@ export interface MeshData {
 
 const addFace = (
   data: MeshData,
-  vertices: [number, number, number, number, number, number, number, number, number, number, number, number],
+  vertices: [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ],
   normal: [number, number, number],
 ) => {
   const start = data.positions.length / 3;
@@ -48,30 +61,26 @@ export const buildChunkMesh = (chunk: ChunkState): MeshData => {
       const z1 = baseZ + 1;
 
       // top face
-      addFace(
-        data,
-        [
-          x0,
-          height,
-          z0,
-          x1,
-          height,
-          z0,
-          x1,
-          height,
-          z1,
-          x0,
-          height,
-          z1,
-        ],
-        [0, 1, 0],
-      );
+      addFace(data, [x0, height, z0, x1, height, z0, x1, height, z1, x0, height, z1], [0, 1, 0]);
 
       const neighbors: Array<{
         dx: number;
         dz: number;
         normal: [number, number, number];
-        vertices: () => [number, number, number, number, number, number, number, number, number, number, number, number];
+        vertices: () => [
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+          number,
+        ];
       }> = [
         {
           dx: 1,
@@ -80,20 +89,7 @@ export const buildChunkMesh = (chunk: ChunkState): MeshData => {
           vertices: () => {
             const neighborHeight = heightAt(chunk, x + 1, z);
             const y0 = neighborHeight;
-            return [
-              x1,
-              y0,
-              z0,
-              x1,
-              height,
-              z0,
-              x1,
-              height,
-              z1,
-              x1,
-              y0,
-              z1,
-            ];
+            return [x1, y0, z0, x1, height, z0, x1, height, z1, x1, y0, z1];
           },
         },
         {
@@ -103,20 +99,7 @@ export const buildChunkMesh = (chunk: ChunkState): MeshData => {
           vertices: () => {
             const neighborHeight = heightAt(chunk, x - 1, z);
             const y0 = neighborHeight;
-            return [
-              x0,
-              y0,
-              z1,
-              x0,
-              height,
-              z1,
-              x0,
-              height,
-              z0,
-              x0,
-              y0,
-              z0,
-            ];
+            return [x0, y0, z1, x0, height, z1, x0, height, z0, x0, y0, z0];
           },
         },
         {
@@ -126,20 +109,7 @@ export const buildChunkMesh = (chunk: ChunkState): MeshData => {
           vertices: () => {
             const neighborHeight = heightAt(chunk, x, z + 1);
             const y0 = neighborHeight;
-            return [
-              x1,
-              y0,
-              z1,
-              x1,
-              height,
-              z1,
-              x0,
-              height,
-              z1,
-              x0,
-              y0,
-              z1,
-            ];
+            return [x1, y0, z1, x1, height, z1, x0, height, z1, x0, y0, z1];
           },
         },
         {
@@ -149,20 +119,7 @@ export const buildChunkMesh = (chunk: ChunkState): MeshData => {
           vertices: () => {
             const neighborHeight = heightAt(chunk, x, z - 1);
             const y0 = neighborHeight;
-            return [
-              x0,
-              y0,
-              z0,
-              x0,
-              height,
-              z0,
-              x1,
-              height,
-              z0,
-              x1,
-              y0,
-              z0,
-            ];
+            return [x0, y0, z0, x0, height, z0, x1, height, z0, x1, y0, z0];
           },
         },
       ];
@@ -174,24 +131,7 @@ export const buildChunkMesh = (chunk: ChunkState): MeshData => {
       });
 
       // bottom face to seal overhangs if height > 0 and neighbor < 0
-      addFace(
-        data,
-        [
-          x0,
-          0,
-          z1,
-          x1,
-          0,
-          z1,
-          x1,
-          0,
-          z0,
-          x0,
-          0,
-          z0,
-        ],
-        [0, -1, 0],
-      );
+      addFace(data, [x0, 0, z1, x1, 0, z1, x1, 0, z0, x0, 0, z0], [0, -1, 0]);
     }
   }
 

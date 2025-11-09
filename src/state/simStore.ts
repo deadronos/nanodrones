@@ -102,7 +102,11 @@ export const useSimStore = create<SimStore>()((set, get) => {
     issueMineOrder: () => {
       set((current) => {
         const simState = pickSimState(current);
-        const candidate = findNearestResource(simState, simState.orders as MineOrder[], simState.player.position);
+        const candidate = findNearestResource(
+          simState,
+          simState.orders as MineOrder[],
+          simState.player.position,
+        );
         if (!candidate) return current;
         const order: MineOrder = {
           id: `order-${simState.orderCounter + 1}`,

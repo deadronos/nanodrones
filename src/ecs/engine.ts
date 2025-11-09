@@ -1,11 +1,5 @@
 import { Rng } from '../state/rng';
-import type {
-  DroneState,
-  MineOrder,
-  SimState,
-  Vec3,
-  VoxelCoord,
-} from '../state/simTypes';
+import type { DroneState, MineOrder, SimState, Vec3, VoxelCoord } from '../state/simTypes';
 import { add, clampVec3XZ, length, normalize, scale } from '../utils/vec3';
 import {
   columnKey,
@@ -65,9 +59,7 @@ const movePlayer = (state: SimState, ctx: SimContext): SimState => {
 
 const assignOrders = (orders: MineOrder[], drones: DroneState[]): MineOrder[] => {
   const next = orders.map(cloneOrder);
-  const idleDrones = new Set(
-    drones.filter((d) => !d.task).map((d) => d.id),
-  );
+  const idleDrones = new Set(drones.filter((d) => !d.task).map((d) => d.id));
   for (const order of next) {
     if (order.status !== 'pending') continue;
     const iter = idleDrones.values().next();
@@ -118,11 +110,12 @@ const stepDrone = (
   const chunk = state.world.chunk;
   const targetWorld = voxelToWorld(chunk, order.target);
   const hoverTarget: Vec3 = [targetWorld[0], droneHoverHeight(order.target), targetWorld[2]];
-  const arrivedHover = length([
-    drone.position[0] - hoverTarget[0],
-    drone.position[1] - hoverTarget[1],
-    drone.position[2] - hoverTarget[2],
-  ]) < 0.1;
+  const arrivedHover =
+    length([
+      drone.position[0] - hoverTarget[0],
+      drone.position[1] - hoverTarget[1],
+      drone.position[2] - hoverTarget[2],
+    ]) < 0.1;
 
   let updatedDrone = { ...drone };
   let completedOrderId: string | null = null;
@@ -144,7 +137,10 @@ const stepDrone = (
     return { drone: updatedDrone, completedOrderId, updatedWorldChunk };
   }
 
-  const miningTask = drone.task?.id === order.id ? drone.task : { id: order.id, type: 'mine', target: order.target, progress: 0 };
+  const miningTask =
+    drone.task?.id === order.id
+      ? drone.task
+      : { id: order.id, type: 'mine', target: order.target, progress: 0 };
   const progress = miningTask.progress + dt;
   if (progress < MINING_TIME) {
     updatedDrone = {
@@ -182,7 +178,11 @@ export const runSimTick = (state: SimState, ctx: SimContext): SimState => {
 
   for (const drone of state.drones) {
     const order = assignedOrders.find((o) => o.droneId === drone.id && o.status === 'assigned');
-    const { drone: nextDrone, completedOrderId, updatedWorldChunk } = stepDrone(drone, order, state, ctx.dt);
+    const {
+      drone: nextDrone,
+      completedOrderId,
+      updatedWorldChunk,
+    } = stepDrone(drone, order, state, ctx.dt);
     if (updatedWorldChunk && order) {
       worldChunk = markResourceDepleted(worldChunk, order.target);
     }

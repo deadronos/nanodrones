@@ -12,7 +12,9 @@ export const DroneList: FC = () => {
       <h2 className="panel-title">Drones</h2>
       <ul className="panel-list">
         {drones.map((drone) => {
-          const activeOrder = orders.find((order) => order.droneId === drone.id && order.status !== 'completed');
+          const activeOrder = orders.find(
+            (order) => order.droneId === drone.id && order.status !== 'completed',
+          );
           return (
             <li key={drone.id} className="panel-row">
               <span className="panel-label">{drone.id}</span>

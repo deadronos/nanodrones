@@ -9,8 +9,7 @@ export interface GeneratedWorld {
 const BASE_HEIGHT = 2;
 const VARIATION = 3;
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, value));
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 const heightIndex = (size: number, x: number, z: number) => z * size + x;
 
@@ -69,10 +68,7 @@ export const listActiveResources = (chunk: ChunkState): VoxelCoord[] => {
   return coords;
 };
 
-export const markResourceDepleted = (
-  chunk: ChunkState,
-  coord: VoxelCoord,
-): ChunkState => {
+export const markResourceDepleted = (chunk: ChunkState, coord: VoxelCoord): ChunkState => {
   const { size, heightMap, resources } = chunk;
   const idx = heightIndex(size, coord.x, coord.z);
   if (!resources[idx]) return chunk;
@@ -100,11 +96,7 @@ export const voxelToWorld = (chunk: ChunkState, coord: VoxelCoord): [number, num
 
 export const columnKey = (coord: { x: number; z: number }) => `${coord.x}:${coord.z}`;
 
-export const sampleHeightAtWorld = (
-  chunk: ChunkState,
-  wx: number,
-  wz: number,
-): number => {
+export const sampleHeightAtWorld = (chunk: ChunkState, wx: number, wz: number): number => {
   const offset = chunk.size / 2;
   const x = Math.floor(wx + offset);
   const z = Math.floor(wz + offset);

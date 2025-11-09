@@ -31,7 +31,7 @@ const buildTerrainEntity = (app: pc.Application, chunk: ChunkState) => {
   const node = new pc.GraphNode();
   const material = createStandardMaterial(TERRAIN_MATERIAL_COLOR.clone());
   material.useMetalness = false;
-  const meshInstance = new pc.MeshInstance(node, mesh, material);
+  const meshInstance = new pc.MeshInstance(mesh, material, node);
 
   const entity = new pc.Entity('terrain');
   entity.addComponent('render', {
@@ -178,7 +178,11 @@ export const PlayCanvasShell: FC = () => {
       const { player, drones, world, camera } = useSimStore.getState();
 
       if (playerRef.current) {
-        playerRef.current.setLocalPosition(player.position[0], player.position[1], player.position[2]);
+        playerRef.current.setLocalPosition(
+          player.position[0],
+          player.position[1],
+          player.position[2],
+        );
       }
 
       const activeIds = new Set<string>();
@@ -212,7 +216,11 @@ export const PlayCanvasShell: FC = () => {
       }
 
       if (cameraRef.current) {
-        const target = new pc.Vec3(player.position[0], player.position[1] + 0.8, player.position[2]);
+        const target = new pc.Vec3(
+          player.position[0],
+          player.position[1] + 0.8,
+          player.position[2],
+        );
         const sinPhi = Math.sin(camera.phi);
         const camX = target.x + camera.distance * sinPhi * Math.sin(camera.theta);
         const camY = target.y + camera.distance * Math.cos(camera.phi);
