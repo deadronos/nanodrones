@@ -6,17 +6,19 @@
  * minimal; extend if you encounter other runtime properties that need typing.
  */
 
-declare namespace pc {
-  interface StandardMaterial {
-    /** Legacy/engine runtime property used by some materials */
-    shininess?: number;
-  }
+declare global {
+  namespace pc {
+    interface StandardMaterial {
+      /** Legacy/engine runtime property used by some materials */
+      shininess?: number;
+    }
 
-  interface Scene {
-    /** Runtime gamma correction value */
-    gammaCorrection?: number;
-    /** Runtime tone mapping enum/value */
-    toneMapping?: number;
+    interface Scene {
+      /** Runtime gamma correction value */
+      gammaCorrection?: number;
+      /** Runtime tone mapping enum/value */
+      toneMapping?: number;
+    }
   }
 }
 

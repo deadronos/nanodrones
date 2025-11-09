@@ -90,14 +90,16 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const droneRefsSnapshot = droneRefs.current;
+      const terrainSnapshot = terrainRef.current;
       app.destroy();
       appRef.current = null;
       playerRef.current = null;
       cameraRef.current = null;
-      droneRefs.current.forEach((entity) => entity.destroy());
-      droneRefs.current.clear();
-      terrainRef.current?.destroy();
-      terrainRef.current = null;
+      droneRefsSnapshot.forEach((entity) => entity.destroy());
+      droneRefsSnapshot.clear();
+      terrainSnapshot?.destroy();
       window.removeEventListener('resize', handleResize);
     };
   }, [onReady]);

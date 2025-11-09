@@ -1,3 +1,5 @@
+/* eslint-env node */
+/* global module */
 // Prettier configuration for the repository
 // Keep formatting consistent across editors/OSes
 module.exports = {
