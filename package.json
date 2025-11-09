@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@playcanvas/react": "^0.10.3",
-    "playcanvas": "^2.11.8",
+    "playcanvas": "^2.12.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zustand": "^5.0.8"
