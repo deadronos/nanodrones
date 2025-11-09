@@ -69,21 +69,20 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
     app.start();
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
-    app.scene.gammaCorrection = pc.GAMMA_SRGB;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    const camera = new pc.Entity('camera');
+    camera.addComponent('camera', {
+      clearColor: new pc.Color(0.03, 0.04, 0.07),
+      farClip: 200,
+      gammaCorrection: pc.GAMMA_SRGB,
+      toneMapping: pc.TONEMAP_ACES,
+    });
+    app.root.addChild(camera);
+    cameraRef.current = camera;
 
     appRef.current = app;
     const { player } = createSimpleScene(app);
     playerRef.current = player;
     onReady?.(app);
-
-    const camera = new pc.Entity('camera');
-    camera.addComponent('camera', {
-      clearColor: new pc.Color(0.03, 0.04, 0.07),
-      farClip: 200,
-    });
-    app.root.addChild(camera);
-    cameraRef.current = camera;
 
     const handleResize = () => {
       app.resizeCanvas(canvas.clientWidth, canvas.clientHeight);
