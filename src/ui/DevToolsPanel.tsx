@@ -50,46 +50,47 @@ export const DevToolsPanel: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 8, background: 'rgba(0,0,0,0.6)', color: '#fff' }}>
-      <h3>Dev Tools (dev only)</h3>
-      <div style={{ marginBottom: 8 }}>
-        <label>
-          Seed:
+    <div className="devtools-panel panel">
+      <h3 className="panel-title">Dev Tools (dev only)</h3>
+
+      <div className="devtools-row">
+        <label className="panel-label" htmlFor="dev-seed-input">
+          Seed
+        </label>
+        <div>
           <input
+            id="dev-seed-input"
+            className="devtools-input"
             value={seedInput}
             onChange={(e) => setSeedInput(e.target.value)}
-            style={{ marginLeft: 8, width: 120 }}
           />
-        </label>
-        <button type="button" onClick={handleNewSeed} style={{ marginLeft: 8 }}>
-          New Seed
-        </button>
+          <button type="button" className="panel-button" onClick={handleNewSeed}>
+            New Seed
+          </button>
+        </div>
       </div>
 
-      <div style={{ marginBottom: 8 }}>
-        <button type="button" onClick={handleSave}>
+      <div className="devtools-row">
+        <button type="button" className="panel-button" onClick={handleSave}>
           Save Snapshot
         </button>
-        <button type="button" onClick={handleLoadFromStorage} style={{ marginLeft: 8 }}>
-          Load Snapshot (localStorage)
+        <button type="button" className="panel-button" onClick={handleLoadFromStorage}>
+          Load Snapshot
         </button>
-        <button type="button" onClick={handleExport} style={{ marginLeft: 8 }}>
+        <button type="button" className="panel-button" onClick={handleExport}>
           Export Snapshot
         </button>
       </div>
 
-      <div style={{ marginBottom: 8 }}>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json"
-          onChange={handleLoad}
-          style={{ display: 'inline-block' }}
-        />
+      <div className="devtools-row">
+        <label className="panel-label" htmlFor="dev-file-input">
+          Import File
+        </label>
+        <input id="dev-file-input" ref={fileRef} type="file" accept="application/json" onChange={handleLoad} />
       </div>
 
-      <div>
-        <button type="button" onClick={handleStep}>
+      <div className="devtools-row">
+        <button type="button" className="panel-button" onClick={handleStep}>
           Step Tick
         </button>
       </div>

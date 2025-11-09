@@ -12,6 +12,7 @@ function App() {
   const togglePause = useSimStore((s) => s.togglePause);
   const reset = useSimStore((s) => s.reset);
   const seed = useSimStore((s) => s.seed);
+  const [showDev, setShowDev] = useState(false);
 
   return (
     <div className="app-root">

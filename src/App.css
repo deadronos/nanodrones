@@ -186,6 +186,31 @@
   color: rgba(191, 219, 254, 0.7);
 }
 
+/* DevTools styles */
+.devtools-panel {
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.devtools-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.devtools-input {
+  margin-left: 0.5rem;
+  width: 120px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+}
+
+
 @media (max-width: 960px) {
   .app-main {
     grid-template-columns: 1fr;
