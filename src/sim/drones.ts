@@ -1,7 +1,7 @@
 import type { ChunkId, DroneState, MineOrder, SimState, Vec3, VoxelCoord } from '../state/simTypes';
 import { add, length, scale } from '../utils/vec3';
 import { chunkKey } from '../voxel/world';
-import { columnKey, voxelToWorld } from '../voxel/generator';
+import { voxelToWorld } from '../voxel/generator';
 
 const DRONE_SPEED = 2.5;
 const MINING_TIME = 2; // seconds to mine a resource block
@@ -95,7 +95,7 @@ export const processDroneTick = (
     updatedDrone = {
       ...updatedDrone,
       activity: 'mining',
-      task: { ...miningTask, progress },
+      task: { ...miningTask, progress, type: 'mine' as const },
       velocity: [0, 0, 0],
       position: hoverTarget,
     };

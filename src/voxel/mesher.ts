@@ -1,5 +1,5 @@
 import type { BlockId, ChunkState, WorldState } from '../state/simTypes';
-import { chunkBlockIndex, chunkKey, getBlockId, isSolidBlock } from './world';
+import { chunkBlockIndex, chunkKey, isSolidBlock } from './world';
 
 export interface MeshData {
   positions: number[];
@@ -133,7 +133,7 @@ export const buildChunkMesh = (world: WorldState, chunk: ChunkState): MeshData =
 
         faces.forEach((face) => {
           if (!face.neighbor || !isSolidBlock(face.neighbor)) {
-            addFace(data, face.vertices, face.normal);
+            addFace(data, face.vertices as [number, number, number, number, number, number, number, number, number, number, number, number], face.normal);
           }
         });
       }

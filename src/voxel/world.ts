@@ -182,7 +182,8 @@ export const listActiveResources = (world: WorldState): ListedResource[] => {
 export const columnKey = (chunk: ChunkId, coord: { x: number; z: number }) =>
   `${chunk.x}:${chunk.z}:${coord.x}:${coord.z}`;
 
-const globalFromVoxel = (world: WorldState, chunk: ChunkId, voxel: VoxelCoord) => {
+// @ts-expect-error - Utility function kept for future use
+const _globalFromVoxel = (world: WorldState, chunk: ChunkId, voxel: VoxelCoord) => {
   const chunkSize = world.chunkSize;
   const gx = chunk.x * chunkSize + voxel.x;
   const gz = chunk.z * chunkSize + voxel.z;
@@ -206,7 +207,8 @@ const addressFromGlobal = (world: WorldState, gx: number, gy: number, gz: number
   };
 };
 
-const cloneAddress = (address: WorldVoxelCoord): WorldVoxelCoord => ({
+// @ts-expect-error - Utility function kept for future use
+const _cloneAddress = (address: WorldVoxelCoord): WorldVoxelCoord => ({
   chunk: { ...address.chunk },
   voxel: { ...address.voxel },
 });

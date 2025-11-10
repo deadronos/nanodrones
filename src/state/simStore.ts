@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { runSimTick, findNearestResource } from '../ecs/engine';
 import { createInitialState, DEFAULT_SEED } from './initialState';
-import { loadSim, saveSim, saveSnapshot, loadSnapshot, CURRENT_VERSION } from './persistence';
+import { loadSim, saveSim, CURRENT_VERSION } from './persistence';
 import type { InputState, MineOrder, SimAction, SimState, Snapshot, Order } from './simTypes';
 import { clearMeshDiffs } from '../voxel/world';
 

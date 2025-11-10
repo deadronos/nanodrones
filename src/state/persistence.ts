@@ -142,7 +142,7 @@ const migrateV1 = (data: PersistedV1): SimState => {
   };
 };
 
-const columnBlockIndex = (size: number, height: number, x: number, y: number, z: number) =>
+const columnBlockIndex = (size: number, _height: number, x: number, y: number, z: number) =>
   y * size * size + z * size + x;
 
 const buildChunkFromLegacy = (legacy: LegacyChunkStateV2): ChunkState => {

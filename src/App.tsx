@@ -30,7 +30,7 @@ function App() {
           <button type="button" onClick={() => reset(seed)}>
             Reload Seed
           </button>
-          {process.env.NODE_ENV !== 'production' && (
+          {import.meta.env.MODE !== 'production' && (
             <button type="button" onClick={() => setShowDev((s) => !s)} title="Dev Tools">
               ⚙
             </button>
@@ -49,7 +49,7 @@ function App() {
           <OrderRadial />
           <DroneList />
           <DebugPanel />
-          {process.env.NODE_ENV !== 'production' && showDev && <DevToolsPanel />}
+          {import.meta.env.MODE !== 'production' && showDev && <DevToolsPanel />}
         </aside>
       </main>
     </div>
