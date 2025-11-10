@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@playcanvas/react": "^0.10.3",
-    "playcanvas": "^2.12.4",
+    "playcanvas": "^2.11.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zustand": "^5.0.8"
@@ -53,9 +53,11 @@
     "tailwindcss": "^4.1.17",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.3",
-    "vite": "^7.2.2",
+    "vite": "npm:rolldown-vite@^7.2.2",
     "vitest": "^4.0.8"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@^7.2.2"
   }
   
 }
-
