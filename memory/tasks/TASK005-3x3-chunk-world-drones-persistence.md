@@ -1,8 +1,8 @@
 # [TASK005] - 3x3 Chunk World, Voxel Drones, and Persistence
 
-**Status:** Pending  
-**Added:** 2025-11-09  
-**Updated:** 2025-11-09
+**Status:** Completed
+**Added:** 2025-11-09
+**Updated:** 2025-11-10
 
 ## Original Request
 
@@ -19,20 +19,23 @@ Extend the voxel world to a deterministic 3x3 chunk grid, update drones to opera
 
 ## Progress Tracking
 
-**Overall Status:** Not Started - 0%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
 | ID  | Description                                      | Status       | Updated     | Notes |
 | --- | ------------------------------------------------ | ------------ | ----------- | ----- |
-| 5.1 | Implement `WorldState` with 3x3 chunk support    | Not Started  | 2025-11-09  |       |
-| 5.2 | Add deterministic per-chunk generation           | Not Started  | 2025-11-09  |       |
-| 5.3 | Add voxel lookup/world-to-voxel helpers          | Not Started  | 2025-11-09  |       |
-| 5.4 | Port drones to voxel-based mining                | Not Started  | 2025-11-09  |       |
-| 5.5 | Update persistence + migrations for `WorldState` | Not Started  | 2025-11-09  |       |
-| 5.6 | Add tests for determinism and persistence        | Not Started  | 2025-11-09  |       |
+| 5.1 | Implement `WorldState` with 3x3 chunk support    | Completed    | 2025-11-10  |       |
+| 5.2 | Add deterministic per-chunk generation           | Completed    | 2025-11-10  |       |
+| 5.3 | Add voxel lookup/world-to-voxel helpers          | Completed    | 2025-11-10  |       |
+| 5.4 | Port drones to voxel-based mining                | Completed    | 2025-11-10  |       |
+| 5.5 | Update persistence + migrations for `WorldState` | Completed    | 2025-11-10  |       |
+| 5.6 | Add tests for determinism and persistence        | Completed    | 2025-11-10  |       |
 
 ## Progress Log
 
 2025-11-09
 - Task created from DES004 spec.
+
+2025-11-10
+- Expanded the world to a deterministic 3×3 grid, migrated drones and persistence, and added coverage for generator determinism.

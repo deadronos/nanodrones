@@ -1,8 +1,8 @@
 # [TASK004] - Voxel Core Types and Single-Chunk Migration
 
-**Status:** In Progress  
-**Added:** 2025-11-09  
-**Updated:** 2025-11-09
+**Status:** Completed
+**Added:** 2025-11-09
+**Updated:** 2025-11-10
 
 ## Original Request
 
@@ -23,17 +23,17 @@ Start by formalizing the voxel representation in the sim core to match DES004 wh
 
 ## Progress Tracking
 
-**Overall Status:** Not Started - 0%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
 | ID  | Description                                  | Status       | Updated     | Notes |
 | --- | -------------------------------------------- | ------------ | ----------- | ----- |
 | 4.1 | Add core voxel types to sim types            | Completed    | 2025-11-09  |       |
-| 4.2 | Implement single-chunk `WorldState`          | In Progress  | 2025-11-09  |       |
-| 4.3 | Update mesher to work on `ChunkState`        | In Progress  | 2025-11-09  |       |
-| 4.4 | Ensure behavior parity with existing world   | Not Started  | 2025-11-09  |       |
-| 4.5 | Add determinism tests for world generation   | Not Started  | 2025-11-09  |       |
+| 4.2 | Implement single-chunk `WorldState`          | Completed    | 2025-11-10  |       |
+| 4.3 | Update mesher to work on `ChunkState`        | Completed    | 2025-11-10  |       |
+| 4.4 | Ensure behavior parity with existing world   | Completed    | 2025-11-10  |       |
+| 4.5 | Add determinism tests for world generation   | Completed    | 2025-11-10  |       |
 
 ## Progress Log
 
@@ -42,3 +42,6 @@ Start by formalizing the voxel representation in the sim core to match DES004 wh
 
 2025-11-10
 - Introduced block-based `ChunkState`, rewired the voxel generator/mesher, and started updating persistence/migration scaffolding for Task004.
+
+2025-11-10
+- Finalized generator and mesher updates, verified determinism, and closed out the task.

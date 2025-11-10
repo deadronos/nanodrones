@@ -9,9 +9,18 @@ describe('Simulation engine', () => {
   it('advances deterministically for identical inputs', () => {
     const base = createInitialState(4242);
     const ctx = {
-      input: { forward: true, backward: false, left: false, right: false },
+      input: {
+        forward: true,
+        backward: false,
+        left: false,
+        right: false,
+        ascend: false,
+        descend: false,
+      },
       heading: 0,
       dt: FIXED_DT,
+      actions: [],
+      cameraPhi: base.player.pitch,
     };
 
     const a = runSimTick(base, ctx);
@@ -26,13 +35,21 @@ describe('Simulation engine', () => {
     expect(target).not.toBeNull();
     if (!target) return;
 
-    const order: MineOrder = { id: 'order-1', type: 'mine', target, status: 'pending' };
+    const order: MineOrder = {
+      id: 'order-1',
+      type: 'mine',
+      target: { x: target.x, y: target.y, z: target.z },
+      chunk: target.chunk,
+      status: 'pending',
+    };
     const assigned = runSimTick(
       { ...state, orders: [order] },
       {
-        input: { forward: false, backward: false, left: false, right: false },
+        input: { forward: false, backward: false, left: false, right: false, ascend: false, descend: false },
         heading: 0,
         dt: FIXED_DT,
+        actions: [],
+        cameraPhi: state.player.pitch,
       },
     );
 

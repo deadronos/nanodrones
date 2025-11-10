@@ -1,8 +1,8 @@
 # [TASK006] - Player Voxel Collision and Targeting
 
-**Status:** Pending  
-**Added:** 2025-11-09  
-**Updated:** 2025-11-09
+**Status:** Completed
+**Added:** 2025-11-09
+**Updated:** 2025-11-10
 
 ## Original Request
 
@@ -18,18 +18,21 @@ Introduce voxel-aware player collision and a deterministic camera-ray-to-voxel t
 
 ## Progress Tracking
 
-**Overall Status:** Not Started - 0%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
 | ID  | Description                             | Status       | Updated     | Notes |
 | --- | --------------------------------------- | ------------ | ----------- | ----- |
-| 6.1 | Integrate voxel collision into movement | Not Started  | 2025-11-09  |       |
-| 6.2 | Implement camera ray → voxel helper     | Not Started  | 2025-11-09  |       |
-| 6.3 | Expose targeting to UI/systems          | Not Started  | 2025-11-09  |       |
-| 6.4 | Add tests for collision/targeting       | Not Started  | 2025-11-09  |       |
+| 6.1 | Integrate voxel collision into movement | Completed    | 2025-11-10  |       |
+| 6.2 | Implement camera ray → voxel helper     | Completed    | 2025-11-10  |       |
+| 6.3 | Expose targeting to UI/systems          | Completed    | 2025-11-10  |       |
+| 6.4 | Add tests for collision/targeting       | Completed    | 2025-11-10  |       |
 
 ## Progress Log
 
 2025-11-09
 - Task created from DES004 spec.
+
+2025-11-10
+- Added collision-aware movement, deterministic raycast targeting, and regression tests covering the new helpers.

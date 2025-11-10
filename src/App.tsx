@@ -6,6 +6,8 @@ import { DebugPanel } from './ui/DebugPanel';
 import DevToolsPanel from './ui/DevToolsPanel';
 import { useSimStore } from './state/simStore';
 import { useState } from 'react';
+import Crosshair from './ui/Crosshair';
+import Hotbar from './ui/Hotbar';
 
 function App() {
   const paused = useSimStore((s) => s.paused);
@@ -38,6 +40,10 @@ function App() {
       <main className="app-main">
         <div className="scene">
           <PlayCanvasShell />
+          <div className="scene-overlays">
+            <Crosshair />
+            <Hotbar />
+          </div>
         </div>
         <aside className="sidebar">
           <OrderRadial />

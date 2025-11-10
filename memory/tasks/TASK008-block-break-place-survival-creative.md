@@ -1,8 +1,8 @@
 # [TASK008] - Block Break/Place Mechanics (Survival + Creative)
 
-**Status:** Pending  
-**Added:** 2025-11-09  
-**Updated:** 2025-11-09
+**Status:** Completed
+**Added:** 2025-11-09
+**Updated:** 2025-11-10
 
 ## Original Request
 
@@ -19,20 +19,23 @@ Implement block breaking and placement using voxel targeting, wired to inventory
 
 ## Progress Tracking
 
-**Overall Status:** Not Started - 0%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
 | ID  | Description                                   | Status       | Updated     | Notes |
 | --- | --------------------------------------------- | ------------ | ----------- | ----- |
-| 8.1 | Wire targeting into break/place actions       | Not Started  | 2025-11-09  |       |
-| 8.2 | Implement survival break → inventory          | Not Started  | 2025-11-09  |       |
-| 8.3 | Implement survival placement ← inventory      | Not Started  | 2025-11-09  |       |
-| 8.4 | Implement creative free break/place           | Not Started  | 2025-11-09  |       |
-| 8.5 | Ensure dirty chunks trigger mesh rebuilds     | Not Started  | 2025-11-09  |       |
-| 8.6 | Add unit/integration tests                    | Not Started  | 2025-11-09  |       |
+| 8.1 | Wire targeting into break/place actions       | Completed    | 2025-11-10  |       |
+| 8.2 | Implement survival break → inventory          | Completed    | 2025-11-10  |       |
+| 8.3 | Implement survival placement ← inventory      | Completed    | 2025-11-10  |       |
+| 8.4 | Implement creative free break/place           | Completed    | 2025-11-10  |       |
+| 8.5 | Ensure dirty chunks trigger mesh rebuilds     | Completed    | 2025-11-10  |       |
+| 8.6 | Add unit/integration tests                    | Completed    | 2025-11-10  |       |
 
 ## Progress Log
 
 2025-11-09
 - Task created from DES004 spec.
+
+2025-11-10
+- Hooked break/place actions into targeting, inventory, and creative overrides with updated tests and mesh diff handling.

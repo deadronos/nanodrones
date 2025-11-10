@@ -10,10 +10,10 @@ export const OrderRadial: FC = () => {
 
   const availableTargets = useMemo(() => {
     const active = new Set(
-      orders.filter((o) => o.status !== 'completed').map((o) => columnKey(o.target)),
+      orders.filter((o) => o.status !== 'completed').map((o) => columnKey(o.chunk, o.target)),
     );
-    return listActiveResources(world.chunk).filter((coord) => !active.has(columnKey(coord))).length;
-  }, [orders, world.chunk]);
+    return listActiveResources(world).filter((coord) => !active.has(columnKey(coord.chunk, coord.voxel))).length;
+  }, [orders, world]);
 
   const disabled = availableTargets === 0;
 

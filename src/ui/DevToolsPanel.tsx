@@ -11,6 +11,8 @@ export const DevToolsPanel: React.FC = () => {
   const [seedInput, setSeedInput] = useState('1337');
   const fileRef = useRef<HTMLInputElement | null>(null);
   const store = useSimStore();
+  const player = useSimStore((s) => s.player);
+  const toggleDevFlag = useSimStore((s) => s.toggleDevFlag);
 
   const handleNewSeed = () => {
     const seed = Number(seedInput) || 1337;
@@ -92,6 +94,30 @@ export const DevToolsPanel: React.FC = () => {
       <div className="devtools-row">
         <button type="button" className="panel-button" onClick={handleStep}>
           Step Tick
+        </button>
+      </div>
+
+      <div className="devtools-row devtools-flags">
+        <button
+          type="button"
+          className={`panel-button ${player.devCreative ? 'is-active' : ''}`}
+          onClick={() => toggleDevFlag('devCreative')}
+        >
+          Creative {player.devCreative ? 'On' : 'Off'}
+        </button>
+        <button
+          type="button"
+          className={`panel-button ${player.devFly ? 'is-active' : ''}`}
+          onClick={() => toggleDevFlag('devFly')}
+        >
+          Fly {player.devFly ? 'On' : 'Off'}
+        </button>
+        <button
+          type="button"
+          className={`panel-button ${player.devNoclip ? 'is-active' : ''}`}
+          onClick={() => toggleDevFlag('devNoclip')}
+        >
+          Noclip {player.devNoclip ? 'On' : 'Off'}
         </button>
       </div>
     </div>

@@ -1,6 +1,6 @@
 # DES004 - Voxel World and Interaction
 
-Status: Draft
+Status: Completed
 
 ## Overview
 
@@ -134,3 +134,8 @@ Implementation constraints:
 - Advanced lighting models and biomes.
 
 These are captured as future extensions and will be designed separately once the core voxel sandbox is stable.
+
+## Outcome
+
+- Tasks TASK004–TASK010 implemented the multi-chunk voxel world, player interaction loop, dev flags, and renderer diff pipeline per this design.
+- Persistence now migrates legacy saves into version 4 with sanitized snapshots and mesh diff rehydration.
