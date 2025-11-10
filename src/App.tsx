@@ -6,6 +6,8 @@ import { DebugPanel } from './ui/DebugPanel';
 import DevToolsPanel from './ui/DevToolsPanel';
 import { useSimStore } from './state/simStore';
 import { useState } from 'react';
+import Crosshair from './ui/Crosshair';
+import Hotbar from './ui/Hotbar';
 
 function App() {
   const paused = useSimStore((s) => s.paused);
@@ -28,7 +30,7 @@ function App() {
           <button type="button" onClick={() => reset(seed)}>
             Reload Seed
           </button>
-          {process.env.NODE_ENV !== 'production' && (
+          {import.meta.env.MODE !== 'production' && (
             <button type="button" onClick={() => setShowDev((s) => !s)} title="Dev Tools">
               ⚙
             </button>
@@ -38,12 +40,16 @@ function App() {
       <main className="app-main">
         <div className="scene">
           <PlayCanvasShell />
+          <div className="scene-overlays">
+            <Crosshair />
+            <Hotbar />
+          </div>
         </div>
         <aside className="sidebar">
           <OrderRadial />
           <DroneList />
           <DebugPanel />
-          {process.env.NODE_ENV !== 'production' && showDev && <DevToolsPanel />}
+          {import.meta.env.MODE !== 'production' && showDev && <DevToolsPanel />}
         </aside>
       </main>
     </div>

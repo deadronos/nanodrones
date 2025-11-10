@@ -32,10 +32,15 @@ export class Mesh {
 }
 
 export class MeshInstance {
-  constructor(public mesh: any, public material: any, public node: any) {}
-}
-
-export class GraphNode {}
+  mesh: any;
+  material: any;
+  node: any;
+  constructor(mesh: any, material: any, node: any) {
+    this.mesh = mesh;
+    this.material = material;
+    this.node = node;
+  }
+}export class GraphNode {}
 
 export class Material {}
 

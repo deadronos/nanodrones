@@ -2,17 +2,24 @@ import type { FC } from 'react';
 import { useEffect, useRef } from 'react';
 import * as pc from 'playcanvas';
 import { buildChunkMesh } from '../voxel/mesher';
-import type { ChunkState } from '../state/simTypes';
 import { useSimStore } from '../state/simStore';
 import { useKeyboard } from '../controls/useKeyboard';
 import { createStandardMaterial } from './scene/materials';
 import { createSimpleScene } from './scene/simpleScene';
+import { chunkKey } from '../voxel/world';
 
 const TERRAIN_MATERIAL_COLOR = new pc.Color(0.2, 0.45, 0.25);
 const DRONE_COLOR = new pc.Color(0.9, 0.8, 0.25);
+const CHUNK_CULL_DISTANCE = 64;
 
-const buildTerrainEntity = (app: pc.Application, chunk: ChunkState) => {
-  const meshData = buildChunkMesh(chunk);
+interface PlayCanvasShellProps {
+  onReady?: (app: pc.Application) => void;
+}
+
+const createChunkEntity = (app: pc.Application, world: ReturnType<typeof useSimStore.getState>['world'], chunkKeyStr: string) => {
+  const chunk = world.chunks[chunkKeyStr];
+  if (!chunk) return null;
+  const meshData = buildChunkMesh(world, chunk);
   const mesh = new pc.Mesh(app.graphicsDevice);
   mesh.setPositions(meshData.positions);
   mesh.setNormals(meshData.normals);
@@ -25,30 +32,30 @@ const buildTerrainEntity = (app: pc.Application, chunk: ChunkState) => {
   material.useMetalness = false;
   const meshInstance = new pc.MeshInstance(mesh, material, node);
 
-  const entity = new pc.Entity('terrain');
+  const entity = new pc.Entity(`chunk-${chunkKeyStr}`);
   entity.addComponent('render', {
     meshInstances: [meshInstance],
   });
-
+  entity.setLocalPosition(chunk.id.x * world.chunkSize, 0, chunk.id.z * world.chunkSize);
   return entity;
 };
-
-interface PlayCanvasShellProps {
-  onReady?: (app: pc.Application) => void;
-}
 
 export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const appRef = useRef<pc.Application | null>(null);
   const playerRef = useRef<pc.Entity | null>(null);
   const droneRefs = useRef<Map<string, pc.Entity>>(new Map());
-  const terrainRef = useRef<pc.Entity | null>(null);
+  const chunkRefs = useRef<Map<string, pc.Entity>>(new Map());
   const cameraRef = useRef<pc.Entity | null>(null);
-  const lastChunkRef = useRef<ChunkState | null>(null);
   const lastTimeRef = useRef<number | null>(null);
 
   const advance = useSimStore((s) => s.advance);
   const setInput = useSimStore((s) => s.setInput);
+  const triggerBreak = useSimStore((s) => s.triggerBreak);
+  const triggerPlace = useSimStore((s) => s.triggerPlace);
+  const cycleHotbar = useSimStore((s) => s.cycleHotbar);
+  const selectHotbar = useSimStore((s) => s.selectHotbar);
+  const acknowledgeMeshDiffs = useSimStore((s) => s.acknowledgeMeshDiffs);
 
   useKeyboard((keys) => {
     setInput({
@@ -56,8 +63,26 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
       backward: Boolean(keys['s'] || keys['arrowdown']),
       left: Boolean(keys['a'] || keys['arrowleft']),
       right: Boolean(keys['d'] || keys['arrowright']),
+      ascend: Boolean(keys[' '] || keys['space']),
+      descend: Boolean(keys['shift']),
     });
   });
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) return;
+      const key = event.key.toLowerCase();
+      if (key === 'q') {
+        cycleHotbar(-1);
+      } else if (key === 'e') {
+        cycleHotbar(1);
+      } else if (key >= '1' && key <= '9') {
+        selectHotbar(Number(key) - 1);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cycleHotbar, selectHotbar]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -72,7 +97,7 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
       clearColor: new pc.Color(0.03, 0.04, 0.07),
-      farClip: 200,
+      farClip: 250,
       gammaCorrection: pc.GAMMA_SRGB,
       toneMapping: pc.TONEMAP_ACES,
     });
@@ -90,16 +115,16 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
     window.addEventListener('resize', handleResize);
 
     return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      const droneRefsSnapshot = droneRefs.current;
-      const terrainSnapshot = terrainRef.current;
+      const chunkSnapshot = chunkRefs.current;
+      const droneSnapshot = droneRefs.current;
       app.destroy();
       appRef.current = null;
       playerRef.current = null;
       cameraRef.current = null;
-      droneRefsSnapshot.forEach((entity) => entity.destroy());
-      droneRefsSnapshot.clear();
-      terrainSnapshot?.destroy();
+      droneSnapshot.forEach((entity) => entity.destroy());
+      droneSnapshot.clear();
+      chunkSnapshot.forEach((entity) => entity.destroy());
+      chunkSnapshot.clear();
       window.removeEventListener('resize', handleResize);
     };
   }, [onReady]);
@@ -109,15 +134,24 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
     if (!canvas) return;
 
     let isDragging = false;
+
     const handleDown = (e: MouseEvent) => {
-      if (e.button !== 0) return;
-      isDragging = true;
-      canvas.requestPointerLock?.();
+      if (e.button === 0) {
+        triggerBreak();
+        isDragging = true;
+        canvas.requestPointerLock?.();
+      } else if (e.button === 2) {
+        triggerPlace();
+      }
     };
-    const handleUp = () => {
-      isDragging = false;
-      document.exitPointerLock?.();
+
+    const handleUp = (e: MouseEvent) => {
+      if (e.button === 0) {
+        isDragging = false;
+        document.exitPointerLock?.();
+      }
     };
+
     const handleMove = (e: MouseEvent) => {
       if (!isDragging) return;
       const { camera } = useSimStore.getState();
@@ -125,15 +159,24 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
       const nextPhi = camera.phi - e.movementY * 0.003;
       useSimStore.getState().setCamera(nextTheta, nextPhi);
     };
+
+    const preventContextMenu = (e: MouseEvent) => {
+      if (e.button === 2) {
+        e.preventDefault();
+      }
+    };
+
     canvas.addEventListener('mousedown', handleDown);
+    canvas.addEventListener('contextmenu', preventContextMenu);
     window.addEventListener('mouseup', handleUp);
     window.addEventListener('mousemove', handleMove);
     return () => {
       canvas.removeEventListener('mousedown', handleDown);
+      canvas.removeEventListener('contextmenu', preventContextMenu);
       window.removeEventListener('mouseup', handleUp);
       window.removeEventListener('mousemove', handleMove);
     };
-  }, []);
+  }, [triggerBreak, triggerPlace]);
 
   useEffect(() => {
     const app = appRef.current;
@@ -151,16 +194,12 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
       const { player, drones, world, camera } = useSimStore.getState();
 
       if (playerRef.current) {
-        playerRef.current.setLocalPosition(
-          player.position[0],
-          player.position[1],
-          player.position[2],
-        );
+        playerRef.current.setLocalPosition(player.position[0], player.position[1], player.position[2]);
       }
 
-      const activeIds = new Set<string>();
+      const activeDroneIds = new Set<string>();
       drones.forEach((drone) => {
-        activeIds.add(drone.id);
+        activeDroneIds.add(drone.id);
         let entity = droneRefs.current.get(drone.id);
         if (!entity) {
           entity = new pc.Entity(drone.id);
@@ -174,26 +213,49 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
         entity.setLocalPosition(drone.position[0], drone.position[1], drone.position[2]);
       });
       droneRefs.current.forEach((entity, id) => {
-        if (!activeIds.has(id)) {
+        if (!activeDroneIds.has(id)) {
           entity.destroy();
           droneRefs.current.delete(id);
         }
       });
 
-      if (world.chunk !== lastChunkRef.current) {
-        terrainRef.current?.destroy();
-        const terrain = buildTerrainEntity(app, world.chunk);
-        app.root.addChild(terrain);
-        terrainRef.current = terrain;
-        lastChunkRef.current = world.chunk;
+      if (world.meshDiffs.length > 0) {
+        world.meshDiffs.forEach((diff) => {
+          const key = chunkKey(diff.chunkId);
+          const existing = chunkRefs.current.get(key);
+          if (existing) {
+            existing.destroy();
+            chunkRefs.current.delete(key);
+          }
+          if (diff.type !== 'remove') {
+            const entity = createChunkEntity(app, world, key);
+            if (entity) {
+              app.root.addChild(entity);
+              chunkRefs.current.set(key, entity);
+            }
+          }
+        });
+        acknowledgeMeshDiffs();
       }
 
+      const playerPos = player.position;
+      chunkRefs.current.forEach((entity, key) => {
+        const chunk = world.chunks[key];
+        if (!chunk) {
+          entity.destroy();
+          chunkRefs.current.delete(key);
+          return;
+        }
+        const centerX = chunk.id.x * world.chunkSize;
+        const centerZ = chunk.id.z * world.chunkSize;
+        const dx = centerX - playerPos[0];
+        const dz = centerZ - playerPos[2];
+        const distance = Math.sqrt(dx * dx + dz * dz);
+        entity.enabled = distance <= CHUNK_CULL_DISTANCE;
+      });
+
       if (cameraRef.current) {
-        const target = new pc.Vec3(
-          player.position[0],
-          player.position[1] + 0.8,
-          player.position[2],
-        );
+        const target = new pc.Vec3(player.position[0], player.position[1] + 0.8, player.position[2]);
         const sinPhi = Math.sin(camera.phi);
         const camX = target.x + camera.distance * sinPhi * Math.sin(camera.theta);
         const camY = target.y + camera.distance * Math.cos(camera.phi);
@@ -208,7 +270,7 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
 
     frameId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frameId);
-  }, [advance]);
+  }, [advance, acknowledgeMeshDiffs]);
 
   return <canvas ref={canvasRef} className="ndc-canvas" />;
 };

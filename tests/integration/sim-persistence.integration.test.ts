@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useSimStore } from '../../src/state/simStore';
-import { saveSnapshot, loadSnapshot } from '../../src/state/persistence';
+import { saveSnapshot, loadSnapshot, sanitizeForPersistence } from '../../src/state/persistence';
 
 const STORAGE_KEY = 'nano-drones-save-test-integration';
 
@@ -36,6 +36,6 @@ describe('Integration: sim persistence roundtrip', () => {
     for (let i = 0; i < L; i++) store.stepOnce();
     const finalB = store.getSnapshot().state;
 
-    expect(finalA).toEqual(finalB);
+    expect(sanitizeForPersistence(finalA)).toEqual(sanitizeForPersistence(finalB));
   });
 });

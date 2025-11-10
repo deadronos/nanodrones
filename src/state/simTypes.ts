@@ -13,16 +13,57 @@ export interface ChunkId {
   z: number;
 }
 
+export type ChunkKey = string;
+
 export interface ChunkState {
   id: ChunkId;
   size: number;
   height: number;
   blocks: BlockId[];
+  dirty: boolean;
+}
+
+export interface ChunkMeshDiff {
+  chunkId: ChunkId;
+  type: 'rebuild' | 'remove';
 }
 
 export interface WorldState {
   seed: number;
-  chunk: ChunkState;
+  chunkSize: number;
+  chunkHeight: number;
+  chunks: Record<ChunkKey, ChunkState>;
+  visibleChunkKeys: ChunkKey[];
+  meshDiffs: ChunkMeshDiff[];
+}
+
+export type ItemId =
+  | 'block:ground'
+  | 'block:resource'
+  | 'resource:ore';
+
+export interface ItemStack {
+  item: ItemId;
+  count: number;
+}
+
+export type InventorySlot = ItemStack | null;
+
+export type InventoryState = InventorySlot[];
+
+export interface HotbarState {
+  slots: (number | null)[];
+  activeIndex: number;
+}
+
+export interface PlayerEquipment {
+  head: ItemStack | null;
+  chest: ItemStack | null;
+  legs: ItemStack | null;
+  boots: ItemStack | null;
+  leftHand: ItemStack | null;
+  rightHand: ItemStack | null;
+  backpack: ItemStack | null;
 }
 
 export type DroneActivity = 'idle' | 'moving' | 'mining' | 'returning' | 'charging';
@@ -49,6 +90,12 @@ export interface PlayerState {
   yaw: number;
   pitch: number;
   velocity: Vec3;
+  inventory: InventoryState;
+  hotbar: HotbarState;
+  equipment: PlayerEquipment;
+  devCreative: boolean;
+  devFly: boolean;
+  devNoclip: boolean;
 }
 
 export interface InputState {
@@ -56,13 +103,33 @@ export interface InputState {
   backward: boolean;
   left: boolean;
   right: boolean;
+  ascend: boolean;
+  descend: boolean;
 }
+
+export type SimActionType = 'break-block' | 'place-block' | 'cycle-hotbar';
+
+export interface BreakBlockAction {
+  type: 'break-block';
+}
+
+export interface PlaceBlockAction {
+  type: 'place-block';
+}
+
+export interface CycleHotbarAction {
+  type: 'cycle-hotbar';
+  direction: -1 | 1;
+}
+
+export type SimAction = BreakBlockAction | PlaceBlockAction | CycleHotbarAction;
 
 export type OrderStatus = 'pending' | 'assigned' | 'completed';
 
 export interface MineOrder {
   id: string;
   type: 'mine';
+  chunk: ChunkId;
   target: VoxelCoord;
   status: OrderStatus;
   droneId?: string;
@@ -79,6 +146,23 @@ export interface SimState {
   drones: DroneState[];
   orders: Order[];
   orderCounter: number;
+  interaction: InteractionState;
+}
+
+export interface TargetedVoxel {
+  chunk: ChunkId;
+  voxel: VoxelCoord;
+  normal: Vec3;
+}
+
+export interface PlacementPreview {
+  chunk: ChunkId;
+  voxel: VoxelCoord;
+}
+
+export interface InteractionState {
+  target: TargetedVoxel | null;
+  placement: PlacementPreview | null;
 }
 
 export interface Snapshot {
@@ -101,6 +185,7 @@ const validateChunkShape = (chunk: unknown): chunk is ChunkState => {
   if (!Array.isArray(chk.blocks)) return false;
   if (chk.blocks.length !== chk.size * chk.size * chk.height) return false;
   if (!chk.blocks.every(isBlockId)) return false;
+  if (typeof chk.dirty !== 'boolean') return false;
   return true;
 };
 
@@ -116,7 +201,16 @@ export const validateSnapshotShape = (s: unknown): s is Snapshot => {
   if (!Array.isArray(st.drones)) return false;
   if (!Array.isArray(st.orders)) return false;
   if (!st.world || typeof st.world !== 'object') return false;
-  if (!validateChunkShape(st.world.chunk)) return false;
+  const world = st.world as any;
+  if (typeof world.seed !== 'number') return false;
+  if (typeof world.chunkSize !== 'number') return false;
+  if (typeof world.chunkHeight !== 'number') return false;
+  if (!world.chunks || typeof world.chunks !== 'object') return false;
+  for (const key of Object.keys(world.chunks)) {
+    if (!validateChunkShape(world.chunks[key])) return false;
+  }
+  if (!Array.isArray(world.visibleChunkKeys)) return false;
+  if (!Array.isArray(world.meshDiffs)) return false;
   // basic drone shape check
   for (const d of st.drones) {
     if (!d || typeof d !== 'object') return false;

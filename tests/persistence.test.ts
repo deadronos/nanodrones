@@ -7,6 +7,7 @@ import {
   migrateSnapshot,
   CURRENT_VERSION,
 } from '../src/state/persistence';
+import { chunkKey } from '../src/voxel/world';
 
 const STORAGE_KEY = 'nano-drones-save';
 
@@ -76,6 +77,7 @@ describe('persistence helpers', () => {
     expect(migrated).not.toBeNull();
     if (!migrated) return;
     expect(migrated.state.player.position).toEqual([1, 2, 3]);
-    expect(migrated.state.world.chunk.blocks.some((value) => value === 'resource')).toBeTruthy();
+    const centerChunk = migrated.state.world.chunks[chunkKey({ x: 0, z: 0 })];
+    expect(centerChunk.blocks.some((value) => value === 'resource')).toBeTruthy();
   });
 });

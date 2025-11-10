@@ -1,9 +1,20 @@
 import { createInitialState, DEFAULT_SEED } from './initialState';
 import { DEFAULT_CHUNK_HEIGHT } from '../voxel/generator';
-import type { ChunkState, DroneState, Order, PlayerState, SimState } from './simTypes';
+import type {
+  BlockId,
+  ChunkId,
+  ChunkState,
+  DroneState,
+  MineOrder,
+  OrderStatus,
+  SimState,
+  Vec3,
+  VoxelCoord,
+} from './simTypes';
+import { chunkKey, parseChunkKey } from '../voxel/world';
 
 const STORAGE_KEY = 'nano-drones-save';
-export const CURRENT_VERSION = 3 as const;
+export const CURRENT_VERSION = 4 as const;
 
 interface LegacyDrone {
   id: string;
@@ -34,14 +45,29 @@ interface LegacyWorldStateV2 {
   chunk: LegacyChunkStateV2;
 }
 
+interface LegacyPlayerStateV2 {
+  position: Vec3;
+  yaw: number;
+  pitch: number;
+  velocity: Vec3;
+}
+
+interface LegacyMineOrderV2 {
+  id: string;
+  type: 'mine';
+  target: { x: number; z: number } | VoxelCoord;
+  status: OrderStatus;
+  droneId?: string;
+}
+
 interface LegacySimStateV2 {
   seed: number;
   rngSeed: number;
   tick: number;
   world: LegacyWorldStateV2;
-  player: PlayerState;
+  player: LegacyPlayerStateV2;
   drones: DroneState[];
-  orders: Order[];
+  orders: LegacyMineOrderV2[];
   orderCounter: number;
 }
 
@@ -50,12 +76,55 @@ interface PersistedV2 {
   state: LegacySimStateV2;
 }
 
+interface LegacyChunkStateV3 {
+  id: ChunkId;
+  size: number;
+  height: number;
+  blocks: BlockId[];
+}
+
+interface LegacyWorldStateV3 {
+  seed: number;
+  chunk: LegacyChunkStateV3;
+}
+
+interface LegacyPlayerStateV3 {
+  position: Vec3;
+  yaw: number;
+  pitch: number;
+  velocity: Vec3;
+}
+
+interface LegacyMineOrderV3 {
+  id: string;
+  type: 'mine';
+  target: VoxelCoord;
+  status: OrderStatus;
+  droneId?: string;
+}
+
+interface LegacySimStateV3 {
+  seed: number;
+  rngSeed: number;
+  tick: number;
+  world: LegacyWorldStateV3;
+  player: LegacyPlayerStateV3;
+  drones: DroneState[];
+  orders: LegacyMineOrderV3[];
+  orderCounter: number;
+}
+
 interface PersistedV3 {
   version: 3;
+  state: LegacySimStateV3;
+}
+
+interface PersistedV4 {
+  version: 4;
   state: SimState;
 }
 
-type PersistedSim = PersistedV1 | PersistedV2 | PersistedV3;
+type PersistedSim = PersistedV1 | PersistedV2 | PersistedV3 | PersistedV4;
 
 const migrateV1 = (data: PersistedV1): SimState => {
   const legacy = data.state;
@@ -73,7 +142,7 @@ const migrateV1 = (data: PersistedV1): SimState => {
   };
 };
 
-const columnBlockIndex = (size: number, height: number, x: number, y: number, z: number) =>
+const columnBlockIndex = (size: number, _height: number, x: number, y: number, z: number) =>
   y * size * size + z * size + x;
 
 const buildChunkFromLegacy = (legacy: LegacyChunkStateV2): ChunkState => {
@@ -97,25 +166,168 @@ const buildChunkFromLegacy = (legacy: LegacyChunkStateV2): ChunkState => {
     size: legacy.size,
     height: DEFAULT_CHUNK_HEIGHT,
     blocks,
+    dirty: true,
   };
 };
 
 const migrateV2 = (data: PersistedV2): SimState => {
   const legacy = data.state;
-  return {
-    ...legacy,
-    world: {
-      ...legacy.world,
-      chunk: buildChunkFromLegacy(legacy.world.chunk),
+  const base = createInitialState(legacy.seed ?? DEFAULT_SEED);
+
+  const centerId: ChunkId = { x: 0, z: 0 };
+  const centerKey = chunkKey(centerId);
+  const upgradedChunk = buildChunkFromLegacy(legacy.world.chunk);
+
+  const upgradedWorld: SimState['world'] = {
+    ...base.world,
+    chunks: {
+      ...base.world.chunks,
+      [centerKey]: upgradedChunk,
     },
+    meshDiffs: [...base.world.meshDiffs, { chunkId: centerId, type: 'rebuild' as const }],
+  };
+
+  const upgradeOrders: MineOrder[] = legacy.orders.map((order) => {
+    const maybeVoxel = order.target as Partial<VoxelCoord>;
+    const voxel: VoxelCoord = {
+      x: maybeVoxel.x ?? (order.target as any).x ?? 0,
+      y: maybeVoxel.y ?? 0,
+      z: maybeVoxel.z ?? (order.target as any).z ?? 0,
+    };
+    return {
+      id: order.id,
+      type: 'mine',
+      chunk: { ...centerId },
+      target: voxel,
+      status: order.status,
+      droneId: order.droneId,
+    };
+  });
+
+  return {
+    ...base,
+    seed: legacy.seed,
+    rngSeed: legacy.rngSeed,
+    tick: legacy.tick,
+    world: upgradedWorld,
+    player: {
+      ...base.player,
+      position: legacy.player.position,
+      yaw: legacy.player.yaw,
+      pitch: legacy.player.pitch,
+      velocity: legacy.player.velocity,
+      devCreative: false,
+      devFly: false,
+      devNoclip: false,
+    },
+    drones: legacy.drones.map((drone) => ({ ...drone })),
+    orders: upgradeOrders,
+    orderCounter: legacy.orderCounter,
+    interaction: { target: null, placement: null },
+  };
+};
+
+const migrateV3 = (data: PersistedV3): SimState => {
+  const legacy = data.state;
+  const base = createInitialState(legacy.seed ?? DEFAULT_SEED);
+
+  const centerKey = chunkKey({ x: 0, z: 0 });
+  const legacyChunk = legacy.world.chunk;
+  const upgradedChunk: ChunkState = {
+    id: { x: 0, z: 0 },
+    size: legacyChunk.size,
+    height: legacyChunk.height,
+    blocks: legacyChunk.blocks.slice(),
+    dirty: true,
+  };
+
+  const upgradedWorld = {
+    ...base.world,
+    chunks: {
+      ...base.world.chunks,
+      [centerKey]: upgradedChunk,
+    },
+    meshDiffs: [...base.world.meshDiffs, { chunkId: { x: 0, z: 0 }, type: 'rebuild' as const }],
+  };
+
+  const orders: MineOrder[] = legacy.orders.map((order) => ({
+    id: order.id,
+    type: 'mine',
+    target: order.target,
+    status: order.status,
+    droneId: order.droneId,
+    chunk: { x: 0, z: 0 },
+  }));
+
+  return {
+    ...base,
+    seed: legacy.seed,
+    rngSeed: legacy.rngSeed,
+    tick: legacy.tick,
+    world: upgradedWorld,
+    player: {
+      ...base.player,
+      position: legacy.player.position,
+      yaw: legacy.player.yaw,
+      pitch: legacy.player.pitch,
+      velocity: legacy.player.velocity,
+      devCreative: false,
+      devFly: false,
+      devNoclip: false,
+    },
+    drones: legacy.drones.map((drone) => ({ ...drone })),
+    orders,
+    orderCounter: legacy.orderCounter,
+    interaction: { target: null, placement: null },
   };
 };
 
 const migrate = (data: PersistedSim): SimState | null => {
-  if (data.version === 3) return data.state;
+  if (data.version === 4) return data.state;
+  if (data.version === 3) return migrateV3(data);
   if (data.version === 2) return migrateV2(data);
   if (data.version === 1) return migrateV1(data);
   return null;
+};
+
+export const sanitizeForPersistence = (state: SimState): SimState => {
+  const sanitizedChunks = Object.fromEntries(
+    Object.entries(state.world.chunks).map(([key, chunk]) => [key, { ...chunk, dirty: false }]),
+  );
+
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      devCreative: false,
+      devFly: false,
+      devNoclip: false,
+    },
+    world: {
+      ...state.world,
+      meshDiffs: [],
+      chunks: sanitizedChunks,
+    },
+    interaction: { target: null, placement: null },
+  };
+};
+
+export const rehydrateWorld = (state: SimState): SimState => {
+  const hydratedChunks = Object.fromEntries(
+    Object.entries(state.world.chunks).map(([key, chunk]) => [key, { ...chunk, dirty: true }]),
+  );
+  const diffs = state.world.visibleChunkKeys.map((key) => ({
+    chunkId: parseChunkKey(key),
+    type: 'rebuild' as const,
+  }));
+  return {
+    ...state,
+    world: {
+      ...state.world,
+      chunks: hydratedChunks,
+      meshDiffs: diffs,
+    },
+  };
 };
 
 export const loadSim = (): SimState | null => {
@@ -125,7 +337,8 @@ export const loadSim = (): SimState | null => {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as PersistedSim;
     const migrated = migrate(parsed);
-    return migrated ?? null;
+    if (!migrated) return null;
+    return rehydrateWorld(sanitizeForPersistence(migrated));
   } catch {
     return null;
   }
@@ -133,7 +346,7 @@ export const loadSim = (): SimState | null => {
 
 export const saveSim = (state: SimState) => {
   if (typeof window === 'undefined') return;
-  const payload: PersistedV3 = { version: CURRENT_VERSION, state };
+  const payload: PersistedV4 = { version: CURRENT_VERSION, state: sanitizeForPersistence(state) };
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch {
@@ -149,8 +362,8 @@ export const saveSnapshot = (snapshot: Snapshot, key = STORAGE_KEY) => {
   const payload = {
     version: CURRENT_VERSION,
     createdAt: snapshot.createdAt ?? new Date().toISOString(),
-    state: snapshot.state,
-  } as PersistedV3;
+    state: sanitizeForPersistence(snapshot.state),
+  } as PersistedV4;
   try {
     window.localStorage.setItem(key, JSON.stringify(payload));
   } catch {
@@ -166,11 +379,11 @@ export const loadSnapshot = (key = STORAGE_KEY): Snapshot | null => {
     const parsed = JSON.parse(raw) as PersistedSim & { createdAt?: string };
     const migrated = migrate(parsed);
     if (!migrated) return null;
-    return {
-      version: CURRENT_VERSION,
-      createdAt: parsed.createdAt ?? new Date().toISOString(),
-      state: migrated,
-    };
+      return {
+        version: CURRENT_VERSION,
+        createdAt: parsed.createdAt ?? new Date().toISOString(),
+        state: rehydrateWorld(sanitizeForPersistence(migrated)),
+      };
   } catch {
     return null;
   }
@@ -181,11 +394,11 @@ export const migrateSnapshot = (raw: unknown): Snapshot | null => {
     const parsed = raw as PersistedSim & { createdAt?: string };
     const migrated = migrate(parsed);
     if (!migrated) return null;
-    return {
-      version: CURRENT_VERSION,
-      createdAt: parsed.createdAt ?? new Date().toISOString(),
-      state: migrated,
-    };
+      return {
+        version: CURRENT_VERSION,
+        createdAt: parsed.createdAt ?? new Date().toISOString(),
+        state: rehydrateWorld(sanitizeForPersistence(migrated)),
+      };
   } catch {
     return null;
   }
@@ -196,7 +409,7 @@ export const exportSnapshotFile = (snapshot: Snapshot, filename = 'nano-drones-s
   const payload = {
     version: snapshot.version ?? CURRENT_VERSION,
     createdAt: snapshot.createdAt ?? new Date().toISOString(),
-    state: snapshot.state,
+    state: sanitizeForPersistence(snapshot.state),
   };
   const str = JSON.stringify(payload);
   if (str.length > 1_000_000) {
@@ -235,6 +448,6 @@ export const importSnapshotFile = async (file: File): Promise<Snapshot> => {
   return {
     version: CURRENT_VERSION,
     createdAt: parsed.createdAt ?? new Date().toISOString(),
-    state: migrated,
+    state: rehydrateWorld(sanitizeForPersistence(migrated)),
   };
 };
