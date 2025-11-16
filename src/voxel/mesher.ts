@@ -102,12 +102,12 @@ export const buildChunkMesh = (world: WorldState, chunk: ChunkState): MeshData =
           {
             normal: [0, 1, 0] as [number, number, number],
             neighbor: neighborBlock(world, chunk, x, y + 1, z),
-            vertices: [x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1],
+            vertices: [x0, y1, z1, x1, y1, z1, x1, y1, z0, x0, y1, z0],
           },
           {
             normal: [0, -1, 0] as [number, number, number],
             neighbor: neighborBlock(world, chunk, x, y - 1, z),
-            vertices: [x0, y0, z1, x1, y0, z1, x1, y0, z0, x0, y0, z0],
+            vertices: [x0, y0, z0, x1, y0, z0, x1, y0, z1, x0, y0, z1],
           },
           {
             normal: [1, 0, 0] as [number, number, number],
