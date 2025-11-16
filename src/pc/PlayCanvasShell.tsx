@@ -238,6 +238,15 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
         acknowledgeMeshDiffs();
       }
 
+      world.visibleChunkKeys.forEach((key) => {
+        if (chunkRefs.current.has(key)) return;
+        const entity = createChunkEntity(app, world, key);
+        if (entity) {
+          app.root.addChild(entity);
+          chunkRefs.current.set(key, entity);
+        }
+      });
+
       const playerPos = player.position;
       chunkRefs.current.forEach((entity, key) => {
         const chunk = world.chunks[key];

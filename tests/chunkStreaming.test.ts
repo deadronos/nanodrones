@@ -6,6 +6,7 @@ import {
   ensureChunksForPosition,
   generateChunk,
   queueVisibleChunkRebuilds,
+  DEFAULT_CHUNK_RADIUS,
 } from '../src/voxel/generator';
 
 describe('chunk streaming', () => {
@@ -51,5 +52,17 @@ describe('chunk streaming', () => {
     populated.visibleChunkKeys.forEach((key) => {
       expect(queued.meshDiffs.some((diff) => diff.type === 'rebuild' && chunkKey(diff.chunkId) === key)).toBe(true);
     });
+  });
+
+  it('populates every chunk within the default view radius', () => {
+    const seed = 2025;
+    const base = createEmptyWorld(seed);
+
+    const populated = ensureChunksForPosition(base, seed, [0, 0, 0], DEFAULT_CHUNK_RADIUS);
+    const expectedCount = (DEFAULT_CHUNK_RADIUS * 2 + 1) ** 2;
+
+    expect(Object.keys(populated.chunks)).toHaveLength(expectedCount);
+    expect(populated.visibleChunkKeys).toHaveLength(expectedCount);
+    expect(populated.meshDiffs.filter((d) => d.type === 'rebuild')).toHaveLength(expectedCount);
   });
 });
