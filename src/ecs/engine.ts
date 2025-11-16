@@ -13,6 +13,7 @@ import type {
 } from '../state/simTypes';
 import {
   columnKey,
+  ensureChunksForPosition,
   listActiveResources,
   markResourceDepleted,
   voxelToWorld,
@@ -210,7 +211,7 @@ export const runSimTick = (state: SimState, ctx: SimContext): SimState => {
   rng.next();
   const assignedOrders = assignOrders(state.orders, state.drones);
 
-  let worldState = state.world;
+  let worldState = ensureChunksForPosition(state.world, state.seed, state.player.position);
   let playerState = {
     ...state.player,
     yaw: ctx.heading,
@@ -264,10 +265,16 @@ export const runSimTick = (state: SimState, ctx: SimContext): SimState => {
   };
 
   const movedState = thirdPersonController(interimState, ctx);
-  const finalRay = raycastWorld(movedState.world, movedState.player.position, lookDir, 8);
+  const worldAfterMovement = ensureChunksForPosition(
+    movedState.world,
+    state.seed,
+    movedState.player.position,
+  );
+  const finalRay = raycastWorld(worldAfterMovement, movedState.player.position, lookDir, 8);
 
   return {
     ...movedState,
+    world: worldAfterMovement,
     interaction: { target: finalRay.target, placement: finalRay.placement },
   };
 };

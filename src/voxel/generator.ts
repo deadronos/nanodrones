@@ -4,10 +4,11 @@ import type {
   ChunkKey,
   ChunkMeshDiff,
   ChunkState,
+  Vec3,
   VoxelCoord,
   WorldState,
 } from '../state/simTypes';
-import { chunkBlockIndex, chunkKey, getColumnHeight } from './world';
+import { chunkBlockIndex, chunkKey, getColumnHeight, parseChunkKey } from './world';
 import { cloneChunk } from './world';
 
 const BASE_HEIGHT = 2;
@@ -16,12 +17,19 @@ const EXTRA_HEADROOM = 2;
 
 export const DEFAULT_CHUNK_SIZE = 16;
 export const DEFAULT_CHUNK_HEIGHT = BASE_HEIGHT + VARIATION + EXTRA_HEADROOM;
-export const DEFAULT_CHUNK_RADIUS = 1;
+export const DEFAULT_CHUNK_RADIUS = 2;
 
 export interface GeneratedChunk {
   chunk: ChunkState;
   resources: VoxelCoord[];
 }
+
+const appendDiff = (diffs: ChunkMeshDiff[], diff: ChunkMeshDiff): ChunkMeshDiff[] => {
+  const exists = diffs.some(
+    (entry) => entry.type === diff.type && entry.chunkId.x === diff.chunkId.x && entry.chunkId.z === diff.chunkId.z,
+  );
+  return exists ? diffs : [...diffs, diff];
+};
 
 const createChunkBlocks = (size: number, height: number) => new Array(size * height * size).fill('air');
 
@@ -91,6 +99,103 @@ export const generateChunk = (
   };
 };
 
+export const createEmptyWorld = (
+  seed: number,
+  size = DEFAULT_CHUNK_SIZE,
+  height = DEFAULT_CHUNK_HEIGHT,
+): WorldState => ({
+  seed,
+  chunkSize: size,
+  chunkHeight: height,
+  chunks: {},
+  visibleChunkKeys: [],
+  meshDiffs: [],
+});
+
+const resourcesInChunk = (chunk: ChunkState): VoxelCoord[] => {
+  const coords: VoxelCoord[] = [];
+  for (let z = 0; z < chunk.size; z += 1) {
+    for (let y = 0; y < chunk.height; y += 1) {
+      for (let x = 0; x < chunk.size; x += 1) {
+        const idx = chunkBlockIndex(chunk, x, y, z);
+        if (chunk.blocks[idx] === 'resource') {
+          coords.push({ x, y, z });
+        }
+      }
+    }
+  }
+  return coords;
+};
+
+const chunkIdFromPosition = (chunkSize: number, position: Vec3): ChunkId => {
+  const half = chunkSize / 2;
+  const chunkX = Math.floor((position[0] + half) / chunkSize);
+  const chunkZ = Math.floor((position[2] + half) / chunkSize);
+  return { x: chunkX, z: chunkZ } satisfies ChunkId;
+};
+
+const desiredChunkIds = (center: ChunkId, radius: number): ChunkId[] => {
+  const ids: ChunkId[] = [];
+  for (let z = center.z - radius; z <= center.z + radius; z += 1) {
+    for (let x = center.x - radius; x <= center.x + radius; x += 1) {
+      ids.push({ x, z });
+    }
+  }
+  return ids;
+};
+
+export const ensureChunksForPosition = (
+  world: WorldState,
+  seed: number,
+  position: Vec3,
+  radius = DEFAULT_CHUNK_RADIUS,
+): WorldState => {
+  const centerChunk = chunkIdFromPosition(world.chunkSize, position);
+  const neededIds = desiredChunkIds(centerChunk, radius);
+  const neededKeys = new Set(neededIds.map((id) => chunkKey(id)));
+  const previousVisible = new Set(world.visibleChunkKeys);
+
+  let nextChunks = world.chunks;
+  let nextMeshDiffs = world.meshDiffs;
+  let changed = false;
+
+  for (const id of neededIds) {
+    const key = chunkKey(id);
+    const existing = nextChunks[key];
+    if (!existing) {
+      const generated = generateChunk(seed, id, world.chunkSize, world.chunkHeight);
+      nextChunks = { ...nextChunks, [key]: generated.chunk };
+      nextMeshDiffs = appendDiff(nextMeshDiffs, { chunkId: id, type: 'rebuild' });
+      changed = true;
+    } else if (!previousVisible.has(key)) {
+      nextMeshDiffs = appendDiff(nextMeshDiffs, { chunkId: id, type: 'rebuild' });
+    }
+  }
+
+  const nextVisibleKeys: ChunkKey[] = neededIds.map((id) => chunkKey(id));
+  const removed = world.visibleChunkKeys.filter((key) => !neededKeys.has(key));
+  if (removed.length > 0) {
+    removed.forEach((key) => {
+      nextMeshDiffs = appendDiff(nextMeshDiffs, { chunkId: parseChunkKey(key), type: 'remove' });
+    });
+    changed = true;
+  }
+
+  if (!changed && nextVisibleKeys.length === world.visibleChunkKeys.length) {
+    const same = nextVisibleKeys.every((key, idx) => key === world.visibleChunkKeys[idx]);
+    if (same && nextMeshDiffs === world.meshDiffs) {
+      return world;
+    }
+  }
+
+  return {
+    ...world,
+    chunks: nextChunks,
+    visibleChunkKeys: nextVisibleKeys,
+    meshDiffs: nextMeshDiffs,
+  };
+};
+
 export interface GeneratedWorldResult {
   world: WorldState;
   resources: Map<ChunkKey, VoxelCoord[]>;
@@ -102,31 +207,18 @@ export const generateWorld = (
   size = DEFAULT_CHUNK_SIZE,
   height = DEFAULT_CHUNK_HEIGHT,
 ): GeneratedWorldResult => {
-  const chunks: Record<ChunkKey, ChunkState> = {};
-  const visibleKeys: ChunkKey[] = [];
-  const meshDiffs: ChunkMeshDiff[] = [];
+  const baseWorld = createEmptyWorld(seed, size, height);
+  const world = ensureChunksForPosition(baseWorld, seed, [0, 0, 0], radius);
   const resources = new Map<ChunkKey, VoxelCoord[]>();
 
-  for (let cz = -radius; cz <= radius; cz += 1) {
-    for (let cx = -radius; cx <= radius; cx += 1) {
-      const id = { x: cx, z: cz } satisfies ChunkId;
-      const generated = generateChunk(seed, id, size, height);
-      const key = chunkKey(id);
-      chunks[key] = generated.chunk;
-      visibleKeys.push(key);
-      meshDiffs.push({ chunkId: id, type: 'rebuild' });
-      resources.set(key, generated.resources);
+  world.visibleChunkKeys.forEach((key) => {
+    const chunk = world.chunks[key];
+    if (!chunk) return;
+    const coords = resourcesInChunk(chunk);
+    if (coords.length > 0) {
+      resources.set(key, coords);
     }
-  }
-
-  const world: WorldState = {
-    seed,
-    chunkSize: size,
-    chunkHeight: height,
-    chunks,
-    visibleChunkKeys: visibleKeys,
-    meshDiffs,
-  };
+  });
 
   return { world, resources };
 };
