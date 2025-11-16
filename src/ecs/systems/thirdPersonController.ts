@@ -1,9 +1,7 @@
-import { add, clampVec3XZ, normalize, scale } from '../../utils/vec3';
+import { add, normalize, scale } from '../../utils/vec3';
 import { sampleHeightAtWorld } from '../../voxel/generator';
-import { parseChunkKey } from '../../voxel/world';
 import type { InputState, SimAction, SimState, Vec3 } from '../../state/simTypes';
 
-const WORLD_MARGIN = 1;
 const FOOT_OFFSET = 0.6;
 export const PLAYER_SPEED = 4;
 const FLY_SPEED = 6;
@@ -71,20 +69,13 @@ export const thirdPersonController = (state: SimState, ctx: SimContext): SimStat
     state.player.devFly ? { allowVertical: true, verticalSpeed: FLY_SPEED } : { allowVertical: false },
   );
 
-  const maxChunkOffset = state.world.visibleChunkKeys.reduce((max, key) => {
-    const id = parseChunkKey(key);
-    return Math.max(max, Math.abs(id.x), Math.abs(id.z));
-  }, 0);
-  const worldHalf = state.world.chunkSize * maxChunkOffset + state.world.chunkSize / 2 - WORLD_MARGIN;
-  const clamped = clampVec3XZ(nextPosition, worldHalf);
-
-  let targetY = clamped[1];
+  let targetY = nextPosition[1];
   if (!state.player.devFly) {
-    const ground = sampleHeightAtWorld(state.world, clamped[0], clamped[2]);
+    const ground = sampleHeightAtWorld(state.world, nextPosition[0], nextPosition[2]);
     targetY = ground + FOOT_OFFSET;
   }
 
-  const finalPos: Vec3 = [clamped[0], targetY, clamped[2]];
+  const finalPos: Vec3 = [nextPosition[0], targetY, nextPosition[2]];
   const invDt = ctx.dt > 0 ? 1 / ctx.dt : 0;
   const velocity: Vec3 = [
     (finalPos[0] - state.player.position[0]) * invDt,
