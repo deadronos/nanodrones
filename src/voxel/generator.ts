@@ -196,6 +196,28 @@ export const ensureChunksForPosition = (
   };
 };
 
+export const queueVisibleChunkRebuilds = (world: WorldState): WorldState => {
+  const rebuildKeys = new Set(
+    world.meshDiffs.filter((diff) => diff.type === 'rebuild').map((diff) => chunkKey(diff.chunkId)),
+  );
+
+  let nextDiffs = world.meshDiffs;
+  let changed = false;
+
+  for (const key of world.visibleChunkKeys) {
+    if (rebuildKeys.has(key)) continue;
+    nextDiffs = appendDiff(nextDiffs, { chunkId: parseChunkKey(key), type: 'rebuild' });
+    changed = true;
+  }
+
+  if (!changed) return world;
+
+  return {
+    ...world,
+    meshDiffs: nextDiffs,
+  };
+};
+
 export interface GeneratedWorldResult {
   world: WorldState;
   resources: Map<ChunkKey, VoxelCoord[]>;

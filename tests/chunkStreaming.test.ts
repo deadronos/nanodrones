@@ -5,6 +5,7 @@ import {
   DEFAULT_CHUNK_SIZE,
   ensureChunksForPosition,
   generateChunk,
+  queueVisibleChunkRebuilds,
 } from '../src/voxel/generator';
 
 describe('chunk streaming', () => {
@@ -36,5 +37,19 @@ describe('chunk streaming', () => {
     const returnView = ensureChunksForPosition(firstView, seed, [0, 0, 0], 1);
 
     expect(returnView.meshDiffs.some((d) => d.type === 'rebuild' && d.chunkId.x === 0 && d.chunkId.z === 0)).toBe(true);
+  });
+
+  it('enqueues rebuilds for visible chunks when mesh diffs are empty', () => {
+    const seed = 42;
+    const base = createEmptyWorld(seed);
+    const populated = ensureChunksForPosition(base, seed, [0, 0, 0], 1);
+    const cleared = { ...populated, meshDiffs: [] };
+
+    const queued = queueVisibleChunkRebuilds(cleared);
+
+    expect(queued.meshDiffs).toHaveLength(populated.visibleChunkKeys.length);
+    populated.visibleChunkKeys.forEach((key) => {
+      expect(queued.meshDiffs.some((diff) => diff.type === 'rebuild' && chunkKey(diff.chunkId) === key)).toBe(true);
+    });
   });
 });

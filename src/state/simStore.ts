@@ -4,6 +4,7 @@ import { createInitialState, DEFAULT_SEED } from './initialState';
 import { loadSim, saveSim, CURRENT_VERSION } from './persistence';
 import type { InputState, MineOrder, SimAction, SimState, Snapshot, Order } from './simTypes';
 import { clearMeshDiffs } from '../voxel/world';
+import { queueVisibleChunkRebuilds } from '../voxel/generator';
 
 const FIXED_DT = 1 / 60;
 const PERSIST_INTERVAL = 60; // once per simulated second
@@ -72,9 +73,11 @@ const shouldPersist = (tick: number, lastPersistedTick: number) =>
 export const useSimStore = create<SimStore>()((set, get) => {
   const persisted = loadSim();
   const initialSim = persisted ?? createInitialState(DEFAULT_SEED);
+  const initialWorld = queueVisibleChunkRebuilds(initialSim.world);
 
   const initial: SimStore = {
     ...initialSim,
+    world: initialWorld,
     paused: false,
     accumulator: 0,
     lastPersistedTick: initialSim.tick,
@@ -123,9 +126,11 @@ export const useSimStore = create<SimStore>()((set, get) => {
     },
     loadSnapshot: (snapshot: Snapshot) => {
       const s = snapshot.state;
+      const hydratedWorld = queueVisibleChunkRebuilds(s.world);
       set((current) => ({
         ...current,
         ...s,
+        world: hydratedWorld,
         paused: false,
         accumulator: 0,
         lastPersistedTick: s.tick,
