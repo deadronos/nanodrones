@@ -14,6 +14,7 @@ const createDrone = (id: number, position: Vec3): DroneState => ({
   velocity: [0, 0, 0],
   battery: 1,
   carrying: 0,
+  sensorRange: 10,
   activity: 'idle',
   task: null,
 });

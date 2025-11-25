@@ -7,6 +7,7 @@
 
 ## Recent Changes
 
+- Fixed linting and typecheck issues across the codebase (prefer-const, unused vars, explicit types).
 - Initial architecture doc (`DES001-initial-architecture.md`) added.
 - Basic requirement set created in `requirements.md` (EARS-style requirements).
 - `TASK001` created for project bootstrapping.

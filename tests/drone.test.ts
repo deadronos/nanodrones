@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createInitialState } from '../src/state/initialState';
 import { processDroneTick } from '../src/sim/drones';
+import type { MineOrder } from '../src/state/simTypes';
 import { listActiveResources, voxelToWorld } from '../src/voxel/generator';
 import { chunkKey } from '../src/voxel/world';
 
@@ -15,9 +16,9 @@ describe('Drone behavior (pure)', () => {
     if (!order) {
       // if no orders present, build a simple MineOrder-like shape
       const target = { x: 0, y: 0, z: 0 };
-      const syntheticOrder = { id: 'o-1', type: 'mine', target, status: 'pending', chunk: { x: 0, z: 0 } } as any;
-      const res = processDroneTick(drone, syntheticOrder, state as any, FIXED_DT);
-      const res2 = processDroneTick(drone, syntheticOrder, state as any, FIXED_DT);
+      const syntheticOrder = { id: 'o-1', type: 'mine', target, status: 'pending', chunk: { x: 0, z: 0 } } as unknown as MineOrder;
+      const res = processDroneTick(drone, syntheticOrder, state, FIXED_DT);
+      const res2 = processDroneTick(drone, syntheticOrder, state, FIXED_DT);
       expect(res).toEqual(res2);
       return;
     }
@@ -27,7 +28,7 @@ describe('Drone behavior (pure)', () => {
       target: state.orders[0].target,
       status: 'pending',
       chunk: state.orders[0].chunk,
-    } as any;
+    } as unknown as MineOrder;
     const a = processDroneTick(drone, ord, state, FIXED_DT);
     const b = processDroneTick(drone, ord, state, FIXED_DT);
     expect(a).toEqual(b);
@@ -46,7 +47,7 @@ describe('Drone behavior (pure)', () => {
         target: { x: 0, y: 0, z: 0 },
         status: 'pending',
         chunk: { x: 0, z: 0 },
-      } as any;
+      } as unknown as MineOrder;
       const s1 = processDroneTick(drone, order, state, 1);
       const s2 = processDroneTick(s1.drone, order, state, 1);
       expect(s2).toBeDefined();
@@ -59,7 +60,7 @@ describe('Drone behavior (pure)', () => {
     const [wx, , wz] = voxelToWorld(chunk, coord);
     const hover = [wx, coord.y + 1.4, wz] as [number, number, number];
     const drone = { ...state.drones[0], position: hover };
-    const order = { id: 'm-1', type: 'mine', target: coord, status: 'pending', chunk: target.chunk } as any;
+    const order = { id: 'm-1', type: 'mine', target: coord, status: 'pending', chunk: target.chunk } as unknown as MineOrder;
 
     // simulate two seconds in one-second steps
     const step1 = processDroneTick(drone, order, state, 1);

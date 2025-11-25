@@ -3,6 +3,8 @@
 ## In Progress
 
 - [TASK001] Bootstrap project structure - In Progress
+- [TASK011] Implement realism improvements (Physics, RNG, Battery) - Completed
+- [TASK012] Implement advanced realism (Resources, Charging, Sensors) - Completed
 
 ## Pending
 

@@ -1,4 +1,5 @@
 import { Rng } from '../state/rng';
+import { Perlin } from '../utils/noise';
 import type {
   ChunkId,
   ChunkKey,
@@ -49,6 +50,7 @@ export const generateChunk = (
   height = DEFAULT_CHUNK_HEIGHT,
 ): GeneratedChunk => {
   const rng = new Rng(deriveChunkSeed(seed, id));
+  const noise = new Perlin(seed);
   const chunk: ChunkState = {
     id,
     size,
@@ -62,13 +64,19 @@ export const generateChunk = (
   for (let z = 0; z < size; z += 1) {
     for (let x = 0; x < size; x += 1) {
       const ridge = Math.sin((x / size) * Math.PI) + Math.cos((z / size) * Math.PI);
-      const noise = rng.nextRange(-1, 1);
+      const heightNoise = rng.nextRange(-1, 1);
       const columnHeight = Math.max(
         1,
-        Math.min(Math.round(BASE_HEIGHT + VARIATION * 0.3 * ridge + VARIATION * 0.5 * noise), BASE_HEIGHT + VARIATION),
+        Math.min(Math.round(BASE_HEIGHT + VARIATION * 0.3 * ridge + VARIATION * 0.5 * heightNoise), BASE_HEIGHT + VARIATION),
       );
       fillColumnGround(chunk, chunk.blocks, x, z, columnHeight);
-      const hasResource = rng.next() > 0.6;
+      
+      // Resource placement using Perlin noise
+      const worldX = id.x * size + x;
+      const worldZ = id.z * size + z;
+      const resourceNoise = noise.noise2d(worldX * 0.1, worldZ * 0.1);
+      const hasResource = resourceNoise > 0.3; // Threshold for resource veins
+
       if (hasResource) {
         const resourceY = Math.min(columnHeight - 1, chunk.height - 1);
         ensureResourceInColumn(chunk, chunk.blocks, { x, y: resourceY, z });
@@ -77,7 +85,22 @@ export const generateChunk = (
     }
   }
 
-  if (resourceCoords.length === 0) {
+  // Place Base at (0,0) in chunk (0,0)
+  if (id.x === 0 && id.z === 0) {
+    const center = Math.floor(size / 2);
+    const columnHeight = Math.max(1, getColumnHeight(chunk, center, center));
+    const baseY = Math.min(columnHeight, chunk.height - 1);
+    // Ensure ground below base
+    if (baseY > 0) {
+        const idx = chunkBlockIndex(chunk, center, baseY, center);
+        chunk.blocks[idx] = 'base';
+        // Remove from resources if it was one
+        const resIdx = resourceCoords.findIndex(r => r.x === center && r.z === center && r.y === baseY);
+        if (resIdx !== -1) resourceCoords.splice(resIdx, 1);
+    }
+  }
+
+  if (resourceCoords.length === 0 && (id.x !== 0 || id.z !== 0)) {
     const center = Math.floor(size / 2);
     const columnHeight = Math.max(1, getColumnHeight(chunk, center, center));
     const resourceY = Math.min(columnHeight - 1, chunk.height - 1);

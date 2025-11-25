@@ -2,11 +2,13 @@ import { add, clampVec3XZ, normalize, scale } from '../../utils/vec3';
 import { sampleHeightAtWorld } from '../../voxel/generator';
 import { parseChunkKey } from '../../voxel/world';
 import type { InputState, SimAction, SimState, Vec3 } from '../../state/simTypes';
+import { applyPhysics } from './physics';
 
 const WORLD_MARGIN = 1;
 const FOOT_OFFSET = 0.6;
 export const PLAYER_SPEED = 4;
-const FLY_SPEED = 6;
+// const FLY_SPEED = 6;
+const ACCELERATION = 20; // Units per second squared
 
 export interface SimContext {
   input: InputState;
@@ -16,88 +18,67 @@ export interface SimContext {
   cameraPhi: number;
 }
 
-export interface MovementOptions {
-  speed?: number;
-  allowVertical?: boolean;
-  verticalSpeed?: number;
-}
-
-export const applyMovement = (
-  position: Vec3,
-  input: InputState,
-  heading: number,
-  dt: number,
-  speed = PLAYER_SPEED,
-  options: MovementOptions = {},
-): Vec3 => {
-  if (dt <= 0) {
-    return position;
-  }
-
+export const thirdPersonController = (state: SimState, ctx: SimContext): SimState => {
+  const { input, heading, dt } = ctx;
+  
+  // Calculate input direction
   const forwardVec: Vec3 = [Math.sin(heading), 0, Math.cos(heading)];
   const rightVec: Vec3 = [Math.cos(heading), 0, -Math.sin(heading)];
 
-  let move: Vec3 = [0, 0, 0];
-  if (input.forward) move = add(move, forwardVec);
-  if (input.backward) move = add(move, scale(forwardVec, -1));
-  if (input.left) move = add(move, scale(rightVec, -1));
-  if (input.right) move = add(move, rightVec);
+  let moveDir: Vec3 = [0, 0, 0];
+  if (input.forward) moveDir = add(moveDir, forwardVec);
+  if (input.backward) moveDir = add(moveDir, scale(forwardVec, -1));
+  if (input.left) moveDir = add(moveDir, scale(rightVec, -1));
+  if (input.right) moveDir = add(moveDir, rightVec);
 
-  const direction = normalize(move);
-  const displacement = scale(direction, speed * dt);
-  let next = add(position, displacement);
+  const direction = normalize(moveDir);
+  const accelMag = state.player.devFly ? ACCELERATION * 2 : ACCELERATION;
+  const acceleration = scale(direction, accelMag);
 
-  if (options.allowVertical) {
+  // Apply vertical movement for fly mode
+  if (state.player.devFly) {
     const verticalDir = (input.ascend ? 1 : 0) - (input.descend ? 1 : 0);
-    if (verticalDir !== 0) {
-      const verticalSpeed = options.verticalSpeed ?? speed;
-      next = add(next, [0, verticalDir * verticalSpeed * dt, 0]);
-    }
-  } else {
-    next = [next[0], position[1], next[2]];
+    acceleration[1] = verticalDir * accelMag;
   }
 
-  return next;
-};
-
-export const thirdPersonController = (state: SimState, ctx: SimContext): SimState => {
-  const speed = state.player.devFly ? FLY_SPEED : PLAYER_SPEED;
-  const nextPosition = applyMovement(
-    state.player.position,
-    ctx.input,
-    ctx.heading,
-    ctx.dt,
-    speed,
-    state.player.devFly ? { allowVertical: true, verticalSpeed: FLY_SPEED } : { allowVertical: false },
+  // Apply physics
+  const nextPhysics = applyPhysics(
+    { 
+      position: state.player.position, 
+      velocity: state.player.velocity,
+      drag: state.player.devFly ? 2.0 : 5.0 
+    }, 
+    dt, 
+    acceleration
   );
 
+  let finalPos = nextPhysics.position;
+  const finalVel = nextPhysics.velocity;
+
+  // World bounds clamping
   const maxChunkOffset = state.world.visibleChunkKeys.reduce((max, key) => {
     const id = parseChunkKey(key);
     return Math.max(max, Math.abs(id.x), Math.abs(id.z));
   }, 0);
   const worldHalf = state.world.chunkSize * maxChunkOffset + state.world.chunkSize / 2 - WORLD_MARGIN;
-  const clamped = clampVec3XZ(nextPosition, worldHalf);
+  const clamped = clampVec3XZ(finalPos, worldHalf);
+  finalPos = [clamped[0], finalPos[1], clamped[2]];
 
-  let targetY = clamped[1];
+  // Ground collision / snapping
   if (!state.player.devFly) {
-    const ground = sampleHeightAtWorld(state.world, clamped[0], clamped[2]);
-    targetY = ground + FOOT_OFFSET;
+    const ground = sampleHeightAtWorld(state.world, finalPos[0], finalPos[2]);
+    const targetY = ground + FOOT_OFFSET;
+    // Simple snap to ground for now, but preserve vertical velocity if jumping (not implemented yet)
+    finalPos[1] = targetY;
+    finalVel[1] = 0;
   }
-
-  const finalPos: Vec3 = [clamped[0], targetY, clamped[2]];
-  const invDt = ctx.dt > 0 ? 1 / ctx.dt : 0;
-  const velocity: Vec3 = [
-    (finalPos[0] - state.player.position[0]) * invDt,
-    (finalPos[1] - state.player.position[1]) * invDt,
-    (finalPos[2] - state.player.position[2]) * invDt,
-  ];
 
   return {
     ...state,
     player: {
       ...state.player,
       position: finalPos,
-      velocity,
+      velocity: finalVel,
     },
   };
 };

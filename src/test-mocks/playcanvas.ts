@@ -20,8 +20,8 @@ export class Color {
 }
 
 export class Mesh {
-  graphicsDevice: any;
-  constructor(graphicsDevice: any) {
+  graphicsDevice: unknown;
+  constructor(graphicsDevice: unknown) {
     this.graphicsDevice = graphicsDevice;
   }
   setPositions() {}
@@ -32,10 +32,10 @@ export class Mesh {
 }
 
 export class MeshInstance {
-  mesh: any;
-  material: any;
-  node: any;
-  constructor(mesh: any, material: any, node: any) {
+  mesh: unknown;
+  material: unknown;
+  node: unknown;
+  constructor(mesh: unknown, material: unknown, node: unknown) {
     this.mesh = mesh;
     this.material = material;
     this.node = node;
@@ -46,29 +46,29 @@ export class Material {}
 
 export class Entity {
   name: string;
-  components: Record<string, any> = {};
-  children: any[] = [];
+  components: Record<string, unknown> = {};
+  children: unknown[] = [];
   constructor(name = '') {
     this.name = name;
   }
-  addComponent(name: string, opts?: any) {
+  addComponent(name: string, opts?: unknown) {
     this.components[name] = opts ?? {};
   }
   setLocalScale() {}
   setLocalPosition() {}
   lookAt() {}
   destroy() {}
-  addChild(child: any) {
+  addChild(child: unknown) {
     this.children.push(child);
   }
 }
 
 export class Application {
-  canvas: any;
-  options: any;
-  graphicsDevice: any;
-  root: { addChild: (c: any) => void };
-  constructor(canvas?: any, opts?: any) {
+  canvas: unknown;
+  options: unknown;
+  graphicsDevice: unknown;
+  root: { addChild: (c: unknown) => void };
+  constructor(canvas?: unknown, opts?: unknown) {
     this.canvas = canvas;
     this.options = opts;
     this.graphicsDevice = {};
@@ -101,7 +101,7 @@ export const GAMMA_SRGB = 0;
 export const TONEMAP_ACES = 0;
 
 // provide a tiny MeshInstance factory to satisfy older code
-export function createMeshInstance(mesh: any, material: any, node: any) {
+export function createMeshInstance(mesh: unknown, material: unknown, node: unknown) {
   return new MeshInstance(mesh, material, node);
 }
 

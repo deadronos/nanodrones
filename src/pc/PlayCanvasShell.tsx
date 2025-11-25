@@ -114,9 +114,10 @@ export const PlayCanvasShell: FC<PlayCanvasShellProps> = ({ onReady }) => {
     };
     window.addEventListener('resize', handleResize);
 
+    const chunkSnapshot = chunkRefs.current;
+    const droneSnapshot = droneRefs.current;
+
     return () => {
-      const chunkSnapshot = chunkRefs.current;
-      const droneSnapshot = droneRefs.current;
       app.destroy();
       appRef.current = null;
       playerRef.current = null;

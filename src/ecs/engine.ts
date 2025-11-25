@@ -20,19 +20,40 @@ import {
 import { chunkKey, getBlockId, raycastWorld, setBlockInWorld } from '../voxel/world';
 import { thirdPersonController, type SimContext } from './systems/thirdPersonController';
 import { processDroneTick } from '../sim/drones';
+import { length, subtract as sub } from '../utils/vec3';
 
 const cloneOrder = (order: MineOrder): MineOrder => ({ ...order });
 
-const assignOrders = (orders: MineOrder[], drones: DroneState[]): MineOrder[] => {
+const assignOrders = (orders: MineOrder[], drones: DroneState[], world: SimState['world']): MineOrder[] => {
   const next = orders.map(cloneOrder);
-  const idleDrones = new Set(drones.filter((d) => !d.task).map((d) => d.id));
+  const idleDrones = drones.filter((d) => !d.task && d.activity === 'idle'); // Only assign to truly idle drones
+  
   for (const order of next) {
     if (order.status !== 'pending') continue;
-    const iter = idleDrones.values().next();
-    if (iter.done) break;
-    order.status = 'assigned';
-    order.droneId = iter.value;
-    idleDrones.delete(iter.value);
+    
+    // Find nearest idle drone within sensor range
+    let bestDrone: DroneState | null = null;
+    let minDist = Infinity;
+
+    const chunk = world.chunks[chunkKey(order.chunk)];
+    if (!chunk) continue;
+    const targetWorld = voxelToWorld(chunk, order.target);
+
+    for (const drone of idleDrones) {
+      const dist = length(sub(targetWorld, drone.position));
+      if (dist <= drone.sensorRange && dist < minDist) {
+        minDist = dist;
+        bestDrone = drone;
+      }
+    }
+
+    if (bestDrone) {
+      order.status = 'assigned';
+      order.droneId = bestDrone.id;
+      // Remove from idle list so we don't double assign
+      const idx = idleDrones.indexOf(bestDrone);
+      if (idx !== -1) idleDrones.splice(idx, 1);
+    }
   }
   return next;
 };
@@ -43,6 +64,8 @@ const blockToItem = (block: BlockId): ItemId | null => {
       return 'block:ground';
     case 'resource':
       return 'resource:ore';
+    case 'base':
+      return 'block:base';
     default:
       return null;
   }
@@ -54,6 +77,8 @@ const itemToBlock = (item: ItemId): BlockId | null => {
       return 'ground';
     case 'block:resource':
       return 'resource';
+    case 'block:base':
+      return 'base';
     default:
       return null;
   }
@@ -208,7 +233,7 @@ const processActions = (
 export const runSimTick = (state: SimState, ctx: SimContext): SimState => {
   const rng = new Rng(state.rngSeed);
   rng.next();
-  const assignedOrders = assignOrders(state.orders, state.drones);
+  const assignedOrders = assignOrders(state.orders, state.drones, state.world);
 
   let worldState = state.world;
   let playerState = {
@@ -219,7 +244,7 @@ export const runSimTick = (state: SimState, ctx: SimContext): SimState => {
 
   const lookDir = computeLookDirection(ctx.heading, ctx.cameraPhi);
   const initialRay = raycastWorld(worldState, playerState.position, lookDir, 8);
-  let interaction = { target: initialRay.target, placement: initialRay.placement };
+  const interaction = { target: initialRay.target, placement: initialRay.placement };
 
   const actionResult = processActions(ctx.actions, playerState, worldState, interaction);
   playerState = actionResult.player;
@@ -242,7 +267,7 @@ export const runSimTick = (state: SimState, ctx: SimContext): SimState => {
     if (completedOrderId) {
       completedOrders.add(completedOrderId);
     }
-    drones.push({ ...nextDrone, battery: Math.max(0, nextDrone.battery - 0.001) });
+    drones.push(nextDrone);
   }
 
   const orders: MineOrder[] = assignedOrders.map((order) => {
@@ -276,6 +301,7 @@ export const findNearestResource = (
   state: SimState,
   excludeOrders: MineOrder[],
   origin: Vec3,
+  maxDistance = Infinity,
 ): (VoxelCoord & { chunk: ChunkId }) | null => {
   const reserved = new Set<string>(excludeOrders.map((o) => columnKey(o.chunk, o.target)));
   let best: { coord: VoxelCoord; distance: number; chunk: ChunkId } | null = null;
@@ -289,6 +315,7 @@ export const findNearestResource = (
     const dy = wy - origin[1];
     const dz = wz - origin[2];
     const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (dist > maxDistance) continue;
     if (!best || dist < best.distance) {
       best = { coord: entry.voxel, distance: dist, chunk: entry.chunk };
     }

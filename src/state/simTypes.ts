@@ -6,7 +6,7 @@ export interface VoxelCoord {
   z: number;
 }
 
-export type BlockId = 'air' | 'ground' | 'resource';
+export type BlockId = 'air' | 'ground' | 'resource' | 'base';
 
 export interface ChunkId {
   x: number;
@@ -40,6 +40,7 @@ export interface WorldState {
 export type ItemId =
   | 'block:ground'
   | 'block:resource'
+  | 'block:base'
   | 'resource:ore';
 
 export interface ItemStack {
@@ -81,6 +82,7 @@ export interface DroneState {
   velocity: Vec3;
   battery: number; // 0..1
   carrying: number; // units of ore
+  sensorRange: number;
   activity: DroneActivity;
   task: DroneTask | null;
 }
@@ -173,17 +175,18 @@ export interface Snapshot {
 }
 
 const isBlockId = (value: unknown): value is BlockId =>
-  value === 'air' || value === 'ground' || value === 'resource';
+  value === 'air' || value === 'ground' || value === 'resource' || value === 'base';
 
 const validateChunkShape = (chunk: unknown): chunk is ChunkState => {
   if (!chunk || typeof chunk !== 'object') return false;
-  const chk = chunk as any;
+  const chk = chunk as Record<string, unknown>;
   if (!chk.id || typeof chk.id !== 'object') return false;
-  if (typeof chk.id.x !== 'number' || typeof chk.id.z !== 'number') return false;
+  const id = chk.id as Record<string, unknown>;
+  if (typeof id.x !== 'number' || typeof id.z !== 'number') return false;
   if (typeof chk.size !== 'number' || chk.size <= 0) return false;
   if (typeof chk.height !== 'number' || chk.height <= 0) return false;
   if (!Array.isArray(chk.blocks)) return false;
-  if (chk.blocks.length !== chk.size * chk.size * chk.height) return false;
+  if (chk.blocks.length !== (chk.size as number) * (chk.size as number) * (chk.height as number)) return false;
   if (!chk.blocks.every(isBlockId)) return false;
   if (typeof chk.dirty !== 'boolean') return false;
   return true;
@@ -191,32 +194,34 @@ const validateChunkShape = (chunk: unknown): chunk is ChunkState => {
 
 export const validateSnapshotShape = (s: unknown): s is Snapshot => {
   if (!s || typeof s !== 'object') return false;
-  const snap = s as any;
+  const snap = s as Record<string, unknown>;
   if (typeof snap.version !== 'number') return false;
   if (!snap.state || typeof snap.state !== 'object') return false;
-  const st = snap.state as any;
+  const st = snap.state as Record<string, unknown>;
   if (typeof st.seed !== 'number') return false;
   if (typeof st.rngSeed !== 'number') return false;
   if (typeof st.tick !== 'number') return false;
   if (!Array.isArray(st.drones)) return false;
   if (!Array.isArray(st.orders)) return false;
   if (!st.world || typeof st.world !== 'object') return false;
-  const world = st.world as any;
+  const world = st.world as Record<string, unknown>;
   if (typeof world.seed !== 'number') return false;
   if (typeof world.chunkSize !== 'number') return false;
   if (typeof world.chunkHeight !== 'number') return false;
   if (!world.chunks || typeof world.chunks !== 'object') return false;
-  for (const key of Object.keys(world.chunks)) {
-    if (!validateChunkShape(world.chunks[key])) return false;
+  const chunks = world.chunks as Record<string, unknown>;
+  for (const key of Object.keys(chunks)) {
+    if (!validateChunkShape(chunks[key])) return false;
   }
   if (!Array.isArray(world.visibleChunkKeys)) return false;
   if (!Array.isArray(world.meshDiffs)) return false;
   // basic drone shape check
-  for (const d of st.drones) {
+  for (const d of st.drones as unknown[]) {
     if (!d || typeof d !== 'object') return false;
-    if (typeof d.id !== 'string') return false;
-    if (!Array.isArray(d.position) || d.position.length !== 3) return false;
-    if (!d.position.every((n: any) => typeof n === 'number')) return false;
+    const drone = d as Record<string, unknown>;
+    if (typeof drone.id !== 'string') return false;
+    if (!Array.isArray(drone.position) || drone.position.length !== 3) return false;
+    if (!drone.position.every((n: unknown) => typeof n === 'number')) return false;
   }
   return true;
 };

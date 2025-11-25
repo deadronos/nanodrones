@@ -36,7 +36,7 @@ describe('persistence helpers', () => {
     const snapshot = { version: CURRENT_VERSION, createdAt: new Date().toISOString(), state };
     expect(() => saveSnapshot(snapshot)).not.toThrow();
     // restore
-    // @ts-ignore
+    // @ts-expect-error - restoring original method
     window.localStorage.setItem = orig;
   });
 

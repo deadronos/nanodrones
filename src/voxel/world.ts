@@ -183,12 +183,12 @@ export const columnKey = (chunk: ChunkId, coord: { x: number; z: number }) =>
   `${chunk.x}:${chunk.z}:${coord.x}:${coord.z}`;
 
 // @ts-expect-error - Utility function kept for future use
-const _globalFromVoxel = (world: WorldState, chunk: ChunkId, voxel: VoxelCoord) => {
-  const chunkSize = world.chunkSize;
-  const gx = chunk.x * chunkSize + voxel.x;
-  const gz = chunk.z * chunkSize + voxel.z;
-  return { gx, gy: voxel.y, gz };
-};
+// const _globalFromVoxel = (world: WorldState, chunk: ChunkId, voxel: VoxelCoord) => {
+//   const chunkSize = world.chunkSize;
+//   const gx = chunk.x * chunkSize + voxel.x;
+//   const gz = chunk.z * chunkSize + voxel.z;
+//   return { gx, gy: voxel.y, gz };
+// };
 
 const addressFromGlobal = (world: WorldState, gx: number, gy: number, gz: number): WorldVoxelCoord | null => {
   const chunkSize = world.chunkSize;
@@ -208,10 +208,10 @@ const addressFromGlobal = (world: WorldState, gx: number, gy: number, gz: number
 };
 
 // @ts-expect-error - Utility function kept for future use
-const _cloneAddress = (address: WorldVoxelCoord): WorldVoxelCoord => ({
-  chunk: { ...address.chunk },
-  voxel: { ...address.voxel },
-});
+// const _cloneAddress = (address: WorldVoxelCoord): WorldVoxelCoord => ({
+//   chunk: { ...address.chunk },
+//   voxel: { ...address.voxel },
+// });
 
 export interface RaycastResult {
   target: TargetedVoxel | null;
@@ -232,9 +232,9 @@ export const raycastWorld = (
 ): RaycastResult => {
   const dir = normalize(direction);
   const half = world.chunkSize / 2;
-  let x = origin[0] + half;
-  let y = origin[1];
-  let z = origin[2] + half;
+  const x = origin[0] + half;
+  const y = origin[1];
+  const z = origin[2] + half;
 
   let gx = Math.floor(x);
   let gy = Math.floor(y);

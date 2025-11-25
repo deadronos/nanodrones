@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useSimStore, createSim } from '../src/state/simStore';
+import { useSimStore } from '../src/state/simStore';
 
 const STORAGE_KEY = 'nano-drones-save';
 

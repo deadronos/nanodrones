@@ -6,6 +6,11 @@
 - Requirements (EARS-style) drafted in `requirements.md`.
 - Basic task index and `TASK001` added.
 - PlayCanvas shell now instantiates a minimal scene, and the deterministic third-person controller is wired through the sim tick.
+- **Realism Improvements**:
+  - Physics system (inertia, drag).
+  - Advanced RNG (Mulberry32).
+  - Drone battery, charging, and sensor ranges.
+  - Perlin noise resource generation.
 
 ## What's Left
 - Add drone behaviors, order queue, and persistence (TASK003).

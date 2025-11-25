@@ -42,8 +42,19 @@ describe('Simulation engine', () => {
       chunk: target.chunk,
       status: 'pending',
     };
+
+    // Ensure a drone is close enough to the target
+    // const drone = state.drones[0];
+    // const [tx, ty, tz] = [target.x, target.y, target.z]; // Voxel coords, need world coords
+    // Actually, findNearestResource returns voxel coords.
+    // We need to convert to world to place drone.
+    // But we can just set drone position to be near the target.
+    // We need to know the world position of the target.
+    // Let's just set the drone's sensor range to Infinity for this test.
+    const dronesWithRange = state.drones.map(d => ({ ...d, sensorRange: 1000 }));
+
     const assigned = runSimTick(
-      { ...state, orders: [order] },
+      { ...state, orders: [order], drones: dronesWithRange },
       {
         input: { forward: false, backward: false, left: false, right: false, ascend: false, descend: false },
         heading: 0,

@@ -30,7 +30,7 @@ export interface SimStore extends SimState {
   getSnapshot(): Snapshot;
   loadSnapshot(snapshot: Snapshot): void;
   stepOnce(): void;
-  applyCommand(cmd: Order): void;
+  applyCommand(cmd: Partial<Order> & { target: VoxelCoord }): void;
   triggerBreak(): void;
   triggerPlace(): void;
   cycleHotbar(direction: -1 | 1): void;
@@ -161,16 +161,15 @@ export const useSimStore = create<SimStore>()((set, get) => {
         return next;
       });
     },
-    applyCommand: (cmd: Order) => {
+    applyCommand: (cmd: Partial<Order> & { target: VoxelCoord }) => {
       set((current) => {
         const simState = pickSimState(current);
-        const id = (cmd as any).id ?? `order-${simState.orderCounter + 1}`;
+        const id = cmd.id ?? `order-${simState.orderCounter + 1}`;
         const order: MineOrder = {
           id,
           type: 'mine',
-          // @ts-ignore - assume cmd has target
-          target: (cmd as any).target,
-          chunk: (cmd as any).chunk ?? { x: 0, z: 0 },
+          target: cmd.target,
+          chunk: cmd.chunk ?? { x: 0, z: 0 },
           status: 'pending',
         };
         const nextOrders = [...simState.orders, order];

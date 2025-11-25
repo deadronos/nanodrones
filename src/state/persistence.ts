@@ -190,9 +190,9 @@ const migrateV2 = (data: PersistedV2): SimState => {
   const upgradeOrders: MineOrder[] = legacy.orders.map((order) => {
     const maybeVoxel = order.target as Partial<VoxelCoord>;
     const voxel: VoxelCoord = {
-      x: maybeVoxel.x ?? (order.target as any).x ?? 0,
+      x: maybeVoxel.x ?? (order.target as unknown as { x: number }).x ?? 0,
       y: maybeVoxel.y ?? 0,
-      z: maybeVoxel.z ?? (order.target as any).z ?? 0,
+      z: maybeVoxel.z ?? (order.target as unknown as { z: number }).z ?? 0,
     };
     return {
       id: order.id,
@@ -431,8 +431,8 @@ export const exportSnapshotFile = (snapshot: Snapshot, filename = 'nano-drones-s
 export const importSnapshotFile = async (file: File): Promise<Snapshot> => {
   if (typeof window === 'undefined') throw new Error('import not supported');
   let text: string;
-  if (typeof (file as any).text === 'function') {
-    text = await (file as any).text();
+  if (typeof (file as unknown as { text: () => Promise<string> }).text === 'function') {
+    text = await (file as unknown as { text: () => Promise<string> }).text();
   } else {
     // fallback for environments where File.text() is not available
     text = await new Promise<string>((resolve, reject) => {

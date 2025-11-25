@@ -22,6 +22,8 @@ describe('player movement integration', () => {
     const dz = player.position[2] - startPosition[2];
     const horizontalDistance = Math.hypot(dx, dz);
 
-    expect(horizontalDistance).toBeCloseTo(PLAYER_SPEED * FIXED_DT);
+    // With physics/inertia, distance will be less than full speed * dt in the first frame
+    expect(horizontalDistance).toBeGreaterThan(0);
+    expect(horizontalDistance).toBeLessThan(PLAYER_SPEED * FIXED_DT);
   });
 });
