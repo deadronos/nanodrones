@@ -1,6 +1,6 @@
 // Prettier configuration for the repository
 // Keep formatting consistent across editors/OSes
-module.exports = {
+export default {
   printWidth: 100,
   tabWidth: 2,
   useTabs: false,
